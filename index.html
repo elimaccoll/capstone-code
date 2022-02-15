@@ -1,0 +1,53 @@
+<html>
+<head>
+  <title>Capstone Sample</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="js/libraries/highcharts.js"></script>
+  <script src="js/libraries/jquery.min.js"></script>
+
+  <script type="module" src="js/scripts/get_sensor_data.js"></script>
+</head>
+<body>
+  <h1>Capstone Sample</h1>
+  <div class="led-button-container">
+    <label for="led-button">Control LED:</label><br>
+    <button id="led-button" value="ON">Turn on</button>
+  </div>
+  <hr>
+  <div class="sensor-reading">
+    <span class="sensor-labels">Temperature</span>
+    <span id="temperature">%TEMPERATURE%</span>
+    <sup class="units">&deg;C</sup>
+  </div>
+  <div class="sensor-reading">
+    <span class="sensor-labels">Humidity</span>
+    <span id="humidity">%HUMIDITY%</span>
+    <sup class="units">&#37;</sup>
+  </div>
+  <hr>
+  <!-- <form id="actuator-form" autocomplete="off">
+    <label for="actuator-value">Enter a value:</label><br>
+    <input type="number" name="actuator-value" id="actuator-value"><br>
+    <button type="submit">Submit</button>
+  </form>
+  <hr> -->
+  <figure class="chart-figure">
+    <div id="chart-humidity"></div>
+  </figure>
+  <form id="humidity-max-threshold-form" autocomplete="off">
+    <label for="humidity-max-threshold">Set max threshold: </label>
+    <input type="number" name="humidity-max-threshold" id="humidity-max-threshold">
+    <button type="submit" class="config-submit-btn">Submit</button>
+  </form>
+  <form id="humidity-min-threshold-form" autocomplete="off">
+    <label for="humidity-min-threshold">Set min threshold: </label>
+    <input type="number" name="humidity-min-threshold" id="humidity-min-threshold">
+    <button type="submit" class="config-submit-btn">Submit</button>
+  </form>
+  <script type="module" src="js/scripts/send_config.js"></script>
+  <script type="module" src="js/scripts/charts_util.js"></script>
+  <script type="module" src="js/scripts/charts.js"></script>
+</body>
+</html>
