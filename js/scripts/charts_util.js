@@ -1,5 +1,8 @@
 import {sendPlotThresholds} from"./send_config.js"
-import { getChartInfo } from "./charts.js"
+import { getChartInfo, getFormIDFromChartID } from "./charts.js"
+
+// TODO: response Highcharts - https://www.highcharts.com/demo/stock/responsive
+// Buttons for different premade display formats
 
 // Plot new data as it is received - used in get_sensor_data
 export function addPlotPoint(chart_id, data_point) {
@@ -25,11 +28,12 @@ function verifyPlotThresholds(chart_id, min, max) {
 
 // Displays the given chart's threshold values in the corresponding input label - updates text
 export function displayThresholds(chart_id) {
-    let chart_config = getChartInfo(chart_id)["config"];
-    let humidity_max_threshold_label = document.getElementById("humidity-max-threshold");
-    let humidity_min_threshold_label = document.getElementById("humidity-min-threshold");
-    humidity_max_threshold_label.value = chart_config.max_threshold;
-    humidity_min_threshold_label.value = chart_config.min_threshold;
+    const chart_config = getChartInfo(chart_id)["config"];
+    const form_id = getFormIDFromChartID(chart_id)
+    const chart_max_threshold_label = document.getElementById(`${form_id}-max-threshold`);
+    const chart_min_threshold_label = document.getElementById(`${form_id}-min-threshold`);
+    chart_max_threshold_label.value = chart_config.max_threshold;
+    chart_min_threshold_label.value = chart_config.min_threshold;
 }
 
 // Draw updated plot thresholds - updates plot zone
@@ -65,13 +69,14 @@ function drawUpdatedPlotThresholds(chart_id) {
 // Handler for when a chart's threshold values are changed
 export function handleThresholdUpdate(chart_id, is_min) {
     // Get the element of the threshold value being updated
-    let bound = is_min ? "min" : "max";
-    let threshold_input = document.getElementById(`humidity-${bound}-threshold`);
-    let threshold_value = parseFloat(threshold_input.value);
+    const bound = is_min ? "min" : "max";
+    const form_id = getFormIDFromChartID(chart_id);
+    const threshold_input = document.getElementById(`${form_id}-${bound}-threshold`);
+    const threshold_value = parseFloat(threshold_input.value);
     // Get current chart threshold values of corresponding chart
     let chart_config = getChartInfo(chart_id)["config"];
-    let curr_max = parseFloat(chart_config.max_threshold);
-    let curr_min = parseFloat(chart_config.min_threshold);
+    const curr_max = parseFloat(chart_config.max_threshold);
+    const curr_min = parseFloat(chart_config.min_threshold);
     // Boolean flag to indicate if values are updated - means they are valid
     let update = false;
     // Condition for updating min threshold
@@ -88,7 +93,8 @@ export function handleThresholdUpdate(chart_id, is_min) {
     displayThresholds(chart_id);
     // Invalid threshold entry
     if (!update) {
-        alert(`Invalid ${chart_id.split('-')[1]} threshold.`);
+        const form_id = getFormIDFromChartID(chart_id);
+        alert(`Invalid ${form_id} threshold.`);
         return;
     }
     // Update drawn threshold zone for new thresholds on the plot
@@ -100,6 +106,7 @@ export function handleThresholdUpdate(chart_id, is_min) {
 
 // Creates initial plot
 export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, config, data_arr) {
+    console.log(chart_id);
     return Highcharts.chart(chart_id, {
         // TODO: Timezone is still wrong
         global: {
@@ -108,6 +115,10 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
             timezoneOffset: 180
         },
         chart: {
+            // TODO: Find a better way than hard coding this
+            height: 350,
+            width: 510,
+            backgroundColor: 'azure', // Same as body background color
             zoomType: 'x',
             panning: true,
             panKey: 'shift'
@@ -185,9 +196,9 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
         series: [{
             name: 'Sensor Data',
             type: 'line', // spline
-            data: data_arr, // pass in?
+            data: data_arr,
             marker: {
-                //fillColor: 'white',
+                //fillColor: 'white', // Set marker fill color
                 lineWidth: 1,
                 lineColor: 'black',
                 //lineColor: Highcharts.getOption().colors[0]

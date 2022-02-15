@@ -7,6 +7,7 @@ export function sendPlotThresholds(type, min_threshold, max_threshold) {
 
 
 // Event listener for Controlling LED
+/*
 const led_listener = document.getElementById("led-button");
 led_listener.addEventListener('click', () => {
     updateLEDState();
@@ -33,3 +34,4 @@ function sendLEDState(led_state) {
     xhttp.open("GET", "/led?state="+led_state, true);
     xhttp.send();
 }
+*/

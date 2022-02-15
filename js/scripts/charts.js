@@ -7,23 +7,29 @@ export function getChartInfo(chart_id) {
     return chart_info[chart_id];
 }
 
+export function getFormIDFromChartID(chart_id) {
+    return chart_id.slice(6);
+}
+
 // Prevents the default behavior of submit button refreshing page
 function handleForm(event) { event.preventDefault(); } 
 
 // Creates a chart with the given parameters
-function setupChart(chart_id, form_id, chart_title, y_axis_title, unit, min_bound, max_bound, min_threshold, max_threshold) {
-    const min_humidity_threshold_form = document.getElementById(`${form_id}-min-threshold-form`);
-    const max_humidity_threshold_form = document.getElementById(`${form_id}-max-threshold-form`);
-    min_humidity_threshold_form.addEventListener('submit', (event) => {
+// TODO: Extrapolate form_id from chart_id - Need to make sure HTML reflects this
+function setupChart(chart_id, chart_title, y_axis_title, unit, min_bound, max_bound, min_threshold, max_threshold) {
+    const form_id = getFormIDFromChartID(chart_id) // Remove the "chart-"
+    const min_threshold_form = document.getElementById(`${form_id}-min-threshold-form`);
+    const max_threshold_form = document.getElementById(`${form_id}-max-threshold-form`);
+    min_threshold_form.addEventListener('submit', (event) => {
         handleForm(event);
         handleThresholdUpdate(chart_id, true);
     });
-    max_humidity_threshold_form.addEventListener('submit', (event) => {
+    max_threshold_form.addEventListener('submit', (event) => {
         handleForm(event);
         handleThresholdUpdate(chart_id, false);
     });
     // Default humidity plot configurable settings
-    var humidity_config = {
+    var chart_config = {
         min_bound: min_bound,
         max_bound: max_bound,
         min_threshold: min_threshold,
@@ -31,18 +37,21 @@ function setupChart(chart_id, form_id, chart_title, y_axis_title, unit, min_boun
     }
     // Create chart and store info
     chart_info[chart_id] = {};
-    chart_info[chart_id]["config"] = humidity_config;
+    chart_info[chart_id]["config"] = chart_config;
     // Create initial plot
-    let humidity_data = []; // TODO: Load in data here
-    let humidity_chart = createPlot(chart_id, chart_title, y_axis_title, unit, humidity_config, humidity_data);
-    chart_info[chart_id]["chart"] = humidity_chart;
+    let chart_data = []; // TODO: Load in data here
+    let chart = createPlot(chart_id, chart_title, y_axis_title, unit, chart_config, chart_data);
+    chart_info[chart_id]["chart"] = chart;
 
     // Write initial threshold values to their corresponding labels
     displayThresholds(chart_id);
 }
 
 function setup() {
-    setupChart("chart-humidity", "humidity", "Humidity", "% Humidity", '%', 0, 100, 20, 30);
+    setupChart("chart-greenhouse-air-temp", "Greenhouse Air Temperature", "Temperature (°C)", "°C", 30, 130, 70, 80); 
+    setupChart("chart-humidity", "Humidity", "% Humidity", '%', 0, 100, 20, 30);
+    setupChart("chart-tds", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, 0, 100);
+    setupChart("chart-soil-moisture", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, 50, 60);
 }
 
 setup();
