@@ -7,6 +7,14 @@ export function getChartInfo(chart_id) {
     return chart_info[chart_id];
 }
 
+export function getAllCharts() {
+    let charts = [];
+    for (const [id, _] of Object.entries(chart_info)) {
+        charts.push(chart_info[id]["chart"]);
+    }
+    return charts;
+}
+
 export function getFormIDFromChartID(chart_id) {
     return chart_id.slice(6);
 }

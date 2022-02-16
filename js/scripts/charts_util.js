@@ -106,7 +106,6 @@ export function handleThresholdUpdate(chart_id, is_min) {
 
 // Creates initial plot
 export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, config, data_arr) {
-    console.log(chart_id);
     return Highcharts.chart(chart_id, {
         // TODO: Timezone is still wrong
         global: {
@@ -116,8 +115,8 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
         },
         chart: {
             // TODO: Find a better way than hard coding this
-            height: 350, // 350
-            width: 635, // 510
+            height: 270, // 270, 350
+            width: 500, // 500, 635
             backgroundColor: 'azure', // Same as body background color
             zoomType: 'x',
             panning: true,

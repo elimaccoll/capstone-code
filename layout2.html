@@ -12,32 +12,31 @@
   <script type="module" src="js/scripts/get_sensor_data.js"></script>
   <script type="module" src="js/scripts/send_config.js"></script>
   <script type="module" src="js/scripts/charts_util.js"></script>
-  <script type="module" src="js/scripts/layout.js"></script>
   <script type="module" src="js/scripts/charts.js"></script>
 </head>
 <body class="body">
 
   <nav class="navbar">
-    <div class="active-layout layout-btn" id="layout1">Layout 1</div>
+    <div><a href="index.html">Layout 1</a></div>
     <div>Greenhouse Monitoring Dashboard</div>
-    <div class="layout-btn" id="layout2">Layout 2</div>
+    <div><a href="layout2.html">Layout 2</a></div>
   </nav>
 
-  <div class="chart-panel-hor" id="chart-panel">
+  <div class="chart-panel-vert">
     <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
+    <div class="chart-container">
       <!-- Actual Chart -->
       <figure class="chart-figure">
         <div id="chart-greenhouse-air-temp"></div>
       </figure>
       <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="greenhouse-air-temp-max-threshold-form" autocomplete="off">
+      <div class="chart-threshold-container">
+        <form class="chart-threshold-form" id="greenhouse-air-temp-max-threshold-form" autocomplete="off">
           <label for="greenhouse-air-temp-max-threshold">Max Threshold: </label>
           <input type="number" class="config-input" name="greenhouse-air-temp-max-threshold" id="greenhouse-air-temp-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="greenhouse-air-temp-min-threshold-form" autocomplete="off">
+        <form class="chart-threshold-form" id="greenhouse-air-temp-min-threshold-form" autocomplete="off">
           <label for="greenhouse-air-temp-min-threshold">Min Threshold: </label>
           <input type="number" class="config-input" name="greenhouse-air-temp-min-threshold" id="greenhouse-air-temp-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
@@ -46,19 +45,19 @@
     </div>
 
     <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
+    <div class="chart-container">
       <!-- Actual Chart -->
       <figure class="chart-figure">
         <div id="chart-humidity"></div>
       </figure>
       <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="humidity-max-threshold-form" autocomplete="off">
+      <div class="chart-threshold-container">
+        <form class="chart-threshold-form" id="humidity-max-threshold-form" autocomplete="off">
           <label for="humidity-max-threshold">Max Threshold: </label>
           <input type="number" class="config-input" name="humidity-max-threshold" id="humidity-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="humidity-min-threshold-form" autocomplete="off">
+        <form class="chart-threshold-form" id="humidity-min-threshold-form" autocomplete="off">
           <label for="humidity-min-threshold">Min Threshold: </label>
           <input type="number" class="config-input" name="humidity-min-threshold" id="humidity-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
@@ -67,19 +66,19 @@
     </div>
 
     <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
+    <div class="chart-container">
       <!-- Actual Chart -->
       <figure class="chart-figure">
         <div id="chart-tds"></div>
       </figure>
       <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="tds-max-threshold-form" autocomplete="off">
+      <div class="chart-threshold-container">
+        <form class="chart-threshold-form" id="tds-max-threshold-form" autocomplete="off">
           <label for="tds-max-threshold">Max Threshold: </label>
           <input type="number" class="config-input" name="tds-max-threshold" id="tds-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="tds-min-threshold-form" autocomplete="off">
+        <form class="chart-threshold-form" id="tds-min-threshold-form" autocomplete="off">
           <label for="tds-min-threshold">Min Threshold: </label>
           <input type="number" class="config-input" name="tds-min-threshold" id="tds-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
@@ -88,19 +87,19 @@
     </div>
 
     <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
+    <div class="chart-container">
       <!-- Actual Chart -->
       <figure class="chart-figure">
         <div id="chart-soil-moisture"></div>
       </figure>
       <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-moisture-max-threshold-form" autocomplete="off">
+      <div class="chart-threshold-container">
+        <form class="chart-threshold-form" id="soil-moisture-max-threshold-form" autocomplete="off">
           <label for="soil-moisture-max-threshold">Max Threshold: </label>
           <input type="number" class="config-input" name="soil-moisture-max-threshold" id="soil-moisture-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-moisture-min-threshold-form" autocomplete="off">
+        <form class="chart-threshold-form" id="soil-moisture-min-threshold-form" autocomplete="off">
           <label for="soil-moisture-min-threshold">Min Threshold: </label>
           <input type="number" class="config-input" name="soil-moisture-min-threshold" id="soil-moisture-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
@@ -110,8 +109,7 @@
 
   </div>
 
-  <div class="info-panel-layout1" id="info-panel">
-    Info/Maintenance Panel
+  <div class="info-panel">
     <!-- Horizontal bar with tabs 
           - Maintenance
           - About (What each chart represents)
