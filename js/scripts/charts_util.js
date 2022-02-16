@@ -116,8 +116,8 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
         },
         chart: {
             // TODO: Find a better way than hard coding this
-            height: 350,
-            width: 510,
+            height: 350, // 350
+            width: 635, // 510
             backgroundColor: 'azure', // Same as body background color
             zoomType: 'x',
             panning: true,

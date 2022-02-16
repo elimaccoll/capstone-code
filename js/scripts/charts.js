@@ -15,7 +15,6 @@ export function getFormIDFromChartID(chart_id) {
 function handleForm(event) { event.preventDefault(); } 
 
 // Creates a chart with the given parameters
-// TODO: Extrapolate form_id from chart_id - Need to make sure HTML reflects this
 function setupChart(chart_id, chart_title, y_axis_title, unit, min_bound, max_bound, min_threshold, max_threshold) {
     const form_id = getFormIDFromChartID(chart_id) // Remove the "chart-"
     const min_threshold_form = document.getElementById(`${form_id}-min-threshold-form`);
