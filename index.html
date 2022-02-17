@@ -12,6 +12,7 @@
   <script type="module" src="js/scripts/get_sensor_data.js"></script>
   <script type="module" src="js/scripts/send_config.js"></script>
   <script type="module" src="js/scripts/charts_util.js"></script>
+  <script type="module" src="js/scripts/info_panel.js"></script>
   <script type="module" src="js/scripts/layout.js"></script>
   <script type="module" src="js/scripts/charts.js"></script>
 </head>
@@ -111,12 +112,16 @@
   </div>
 
   <div class="info-panel-layout1" id="info-panel">
-    Info/Maintenance Panel
-    <!-- Horizontal bar with tabs 
-          - Maintenance
-          - About (What each chart represents)
-          - Plant info ?
-    -->
+    <div class="info-panel-tab-container">
+      <div class="info-panel-tab-active info-panel-tab" id="help-tab">Help</div>
+      <div class="info-panel-tab" id="maintenance-tab">Maintenance</div>
+      <div class="info-panel-tab" id="plant-tab">Plant Info</div>
+      <div class="info-panel-tab" id="about-tab">About</div>
+    </div>
+    <div class="info-tab" id="help-tab-content">help text</div>
+    <div class="hidden info-tab" id="maintenance-tab-content">maintenance text</div>
+    <div class="hidden info-tab" id="plant-tab-content">plant text</div>
+    <div class="hidden info-tab" id="about-tab-content">about text</div>
   </div>
 
 </body>

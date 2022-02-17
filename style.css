@@ -1,6 +1,7 @@
 /* TODO: Separate CSS files for layout 1 and 2 */
 .hidden {
   visibility: hidden;
+  display: none;
 }
 
 .body {
@@ -8,7 +9,7 @@
   width: 100%;
   height: 100%;
   background-color:aliceblue;
-  /* overflow-y: hidden; */
+  overflow-y: hidden;
   font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 .navbar {
@@ -95,7 +96,7 @@
   height: 50%;
   margin: 0 0 0 3px;
   border: 1px solid cornflowerblue;
-  border-bottom: 5px solid cornflowerblue;
+  border-bottom: 3px solid cornflowerblue;
   border-top: 0;
 }
 .chart-container-layout1 {
@@ -111,6 +112,9 @@
   height: 86%;
   width: 100%;
   margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .chart-threshold-container-layout1 {
   text-align: center;
@@ -150,11 +154,38 @@
 }
 
 /* Info Panel */
-.info-panel-layout1 {
-  height: 50%;
-  width: 100%;
+#info-panel {
+  background-color: azure;
+  color: black;
+}
+.info-panel-tab-container {
+  border: 1px solid cornflowerblue;
+  width: 400px;
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: lightcyan;
+}
+.info-panel-tab {
+  color: black;
+  text-align: center;
+  margin: 0px 10px 0 10px;
+  padding: 0 5px 0 5px;
+  user-select: none;
+  cursor: pointer;
+  border: 1px solid black;
+  background-color: lightgray;
+}
+.info-panel-tab:active, .info-panel-tab:hover, .info-panel-tab-active {
+  background-color: cornflowerblue;
 }
 
+
+.info-panel-layout1 {
+  height: 46%;
+  width: 100%;
+}
 .info-panel-layout2 {
   float: left;
   height: 100%;
