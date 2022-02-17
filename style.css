@@ -192,6 +192,14 @@
   width: 49%;
 }
 
+.info-tab {
+  width: 90%;
+  height: 100%;
+  font-size: large;
+  margin: 20px 20px 20px 20px;
+
+}
+
 
 
 /* Get rid of arrows in number input boxes */

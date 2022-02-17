@@ -25,6 +25,7 @@ let active_tab = 0;
 for (let i = 0; i < tabs.length; i++) {
     let tab = tabs[i];
     tab.addEventListener('click', () => {
+        if (active_tab == i) { return; }
         tab.classList.add("info-panel-tab-active");
         tabs[active_tab].classList.remove("info-panel-tab-active");
         content[i].classList.remove("hidden");
