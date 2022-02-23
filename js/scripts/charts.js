@@ -23,7 +23,7 @@ export function getFormIDFromChartID(chart_id) {
 function handleForm(event) { event.preventDefault(); } 
 
 // Creates a chart with the given parameters
-function setupChart(chart_id, chart_title, y_axis_title, unit, min_bound, max_bound, min_threshold, max_threshold) {
+function setupChart(chart_id, msg_id, chart_title, y_axis_title, unit, min_bound, max_bound, min_threshold, max_threshold) {
     const form_id = getFormIDFromChartID(chart_id) // Remove the "chart-"
     const min_threshold_form = document.getElementById(`${form_id}-min-threshold-form`);
     const max_threshold_form = document.getElementById(`${form_id}-max-threshold-form`);
@@ -49,16 +49,18 @@ function setupChart(chart_id, chart_title, y_axis_title, unit, min_bound, max_bo
     let chart_data = []; // TODO: Load in data here
     let chart = createPlot(chart_id, chart_title, y_axis_title, unit, chart_config, chart_data);
     chart_info[chart_id]["chart"] = chart;
+    chart_info[chart_id]["msg_id"] = msg_id;
 
     // Write initial threshold values to their corresponding labels
     displayThresholds(chart_id);
 }
 
 function setup() {
-    setupChart("chart-greenhouse-air-temp", "Greenhouse Air Temperature", "Temperature (°C)", "°C", 30, 130, 70, 80); 
-    setupChart("chart-humidity", "Humidity", "% Humidity", '%', 0, 100, 20, 30);
-    setupChart("chart-tds", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, 0, 100);
-    setupChart("chart-soil-moisture", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, 50, 60);
+    // The chart-id must match the DOM elements
+    setupChart("chart-internal-air-temp", "it", "Greenhouse Air Temperature", "Temperature (°C)", "°C", 0, 100, 20, 30); 
+    setupChart("chart-humidity", "ih", "Humidity", "% Humidity", '%', 0, 100, 40, 50);
+    setupChart("chart-tds", "td", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, 0, 100);
+    setupChart("chart-soil-moisture", "sm", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, 50, 60);
 }
 
 setup();

@@ -100,7 +100,7 @@ export function handleThresholdUpdate(chart_id, is_min) {
     // Update drawn threshold zone for new thresholds on the plot
     drawUpdatedPlotThresholds(chart_id);
     // Send updated thresholds to arduino
-    sendPlotThresholds("h", getChartInfo(chart_id)["config"].min_threshold, getChartInfo(chart_id)["config"].max_threshold);
+    sendPlotThresholds(getChartInfo(chart_id)["msg_id"], getChartInfo(chart_id)["config"].min_threshold, getChartInfo(chart_id)["config"].max_threshold);
 }
 
 

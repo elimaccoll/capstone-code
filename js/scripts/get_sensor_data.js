@@ -1,9 +1,10 @@
 import { addPlotPoint } from "./charts_util.js";
-// Request sensor readings every 3 seconds
-var interval = 3000;
 
-let active = false;
-let testing = true;
+// TODO: Line up request intervals with arduino read intervals
+var interval = 3000; // 3 seconds
+
+let active = true;
+let testing = !active;
 
 if (active) {
     // Request sensor data on their specific routes
@@ -11,28 +12,37 @@ if (active) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            // console.log(parseFloat(this.responseText));
-            // document.getElementById("temperature").innerHTML = this.responseText;
+            let internal_air_temp = parseFloat(this.responseText);
+            addPlotPoint("chart-internal-air-temp", internal_air_temp);
         }
     };
-    xhttp.open("GET", "/temperature", true);
+    xhttp.open("GET", "/internal_air_temp", true);
     xhttp.send();
-    }, interval ) ;
+    }, 1000 ) ;
 
     setInterval(function ( ) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            let humidity_value = parseFloat(this.responseText);
-            // console.log(humidity_value);
-            addPlotPoint("chart-humidity", humidity_value);
-            document.getElementById("humidity").innerHTML = this.responseText;
+            let internal_humidity = parseFloat(this.responseText);
+            addPlotPoint("chart-humidity", internal_humidity);
         }
     };
-    xhttp.open("GET", "/humidity", true);
+    xhttp.open("GET", "/internal_humidity", true);
     xhttp.send();
-    }, interval ) ;
+    }, 1000 ) ;
 
+    // FAKE DATA FOR DEMO
+    // Soil Moisture
+    setInterval(() => {
+        let sm_data = Math.random() * 30 + 40;
+        addPlotPoint("chart-soil-moisture", sm_data);
+    }, 3000);
+    // TDS
+    setInterval(() => {
+        let tds_data = Math.random() * 70 + 15;
+        addPlotPoint("chart-tds", tds_data);
+    }, 5000);
 }
 
 if (testing) {

@@ -15,8 +15,8 @@
   <script type="module" src="js/scripts/info_panel.js"></script>
   <script type="module" src="js/scripts/layout.js"></script>
   <script type="module" src="js/scripts/charts.js"></script>
-  <script type="text/javscript" src="database.json"></script>
-  <script type="module" src="js/scripts/store_data.js"></script>
+  <!-- <script type="text/javscript" src="database.json"></script>
+  <script type="module" src="js/scripts/store_data.js"></script> -->
 </head>
 <body class="body">
 
@@ -31,18 +31,18 @@
     <div class="chart-container chart-container-layout1">
       <!-- Actual Chart -->
       <figure class="chart-figure">
-        <div id="chart-greenhouse-air-temp"></div>
+        <div id="chart-internal-air-temp"></div>
       </figure>
       <!-- Threshold Forms for Chart -->
       <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="greenhouse-air-temp-max-threshold-form" autocomplete="off">
-          <label for="greenhouse-air-temp-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="greenhouse-air-temp-max-threshold" id="greenhouse-air-temp-max-threshold">
+        <form class="chart-threshold-form chart-threshold-form-layout1" id="internal-air-temp-max-threshold-form" autocomplete="off">
+          <label for="internal-air-temp-max-threshold">Max Threshold: </label>
+          <input type="number" class="config-input" name="internal-air-temp-max-threshold" id="internal-air-temp-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="greenhouse-air-temp-min-threshold-form" autocomplete="off">
-          <label for="greenhouse-air-temp-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="greenhouse-air-temp-min-threshold" id="greenhouse-air-temp-min-threshold">
+        <form class="chart-threshold-form chart-threshold-form-layout1" id="internal-air-temp-min-threshold-form" autocomplete="off">
+          <label for="internal-air-temp-min-threshold">Min Threshold: </label>
+          <input type="number" class="config-input" name="internal-air-temp-min-threshold" id="internal-air-temp-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
       </div>

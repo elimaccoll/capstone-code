@@ -68,7 +68,7 @@
   overflow-y: none;
   white-space: nowrap;
   padding: 0 3px 0 3px;
-  height: 49%;
+  height: 50%;
 }
 .chart-panel-hor .chart-container{
   display: inline-block;
