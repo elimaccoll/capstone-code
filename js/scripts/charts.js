@@ -58,7 +58,13 @@ function setupChart(chart_id, msg_id, chart_title, y_axis_title, unit, min_bound
 function setup() {
     // The chart-id must match the DOM elements
     setupChart("chart-internal-air-temp", "it", "Greenhouse Air Temperature", "Temperature (°C)", "°C", 0, 100, 20, 30); 
-    setupChart("chart-humidity", "ih", "Humidity", "% Humidity", '%', 0, 100, 40, 50);
+    setupChart("chart-internal-humidity", "ih", "Greenhouse Humidity", "% Humidity", '%', 0, 100, 40, 50);
+
+    // TODO: BETTER OPTION - Add a second series to air temp and humidity plots (series 1 -internal, series 2 - external)
+    // setupChart("chart-external-air-temp", "et", "External Air Temperature", "Temperature (°C)", '%', 0, 100, 0, 100);
+    // setupChart("chart-external-humidity", "eh", "External Humidity", "% Humidity", '%', 0, 100, 0, 100);
+
+
     setupChart("chart-tds", "td", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, 0, 100);
     setupChart("chart-soil-moisture", "sm", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, 50, 60);
 }

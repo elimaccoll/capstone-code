@@ -3,8 +3,12 @@ import { addPlotPoint } from "./charts_util.js";
 // TODO: Line up request intervals with arduino read intervals
 var interval = 3000; // 3 seconds
 
-let active = true;
+let active = false;
 let testing = !active;
+
+// TODO: Change chart-internal-air-temp to just air temp and simply determine which series to add the point to based on
+//       the received data type (it for internal temperature (Series 0), et for external temperature (Series 1))
+// TODO: Do the same thing for humidity (And any other sensor with internal and external values)
 
 if (active) {
     // Request sensor data on their specific routes
@@ -53,8 +57,9 @@ if (testing) {
     });
     // Temperature and Humidity
     setInterval(() => {
-        addPlotPoint("chart-humidity", data);
-        addPlotPoint("chart-greenhouse-air-temp", data + (Math.random() * 10 + 50));
+        addPlotPoint("chart-internal-humidity", data);
+        addPlotPoint("chart-internal-air-temp", data + (Math.random() * 10 + 50));
+        addPlotPoint("chart-internal-air-temp", data + 30, 1); // Plotting points on multiple series on same graph
     }, 1000);
     // Soil Moisture
     setInterval(() => {

@@ -5,11 +5,11 @@ import { getChartInfo, getFormIDFromChartID } from "./charts.js"
 // Buttons for different premade display formats
 
 // Plot new data as it is received - used in get_sensor_data
-export function addPlotPoint(chart_id, data_point) {
+export function addPlotPoint(chart_id, data_point, series_ind = 0) {
     let chart = getChartInfo(chart_id)["chart"];
     let time = new Date(Date.now());
     // TODO: Fix time
-    chart.series[0].addPoint({x:time, y:data_point});
+    chart.series[series_ind].addPoint({x:time, y:data_point});
 }
 
  /* Verifies given threshold values for the given chart
@@ -40,7 +40,6 @@ export function displayThresholds(chart_id) {
 function drawUpdatedPlotThresholds(chart_id) {
     let chart = getChartInfo(chart_id)["chart"];
     let chart_config = getChartInfo(chart_id)["config"];
-    // chart.series[0].addPoint({x:time, y:data_point})
     chart.update({
         yAxis: {
             plotBands: [{
@@ -49,8 +48,24 @@ function drawUpdatedPlotThresholds(chart_id) {
                 to: chart_config.max_threshold
             }]
         },
-        plotOptions: {
-            series: {
+        // Applies zones to all series
+        // plotOptions: {
+        //     series: {
+        //         zones: [{
+        //             value: chart_config.min_threshold,
+        //             color: 'red'
+        //         }, {
+        //             value: chart_config.max_threshold,
+        //             color: 'blue'
+        //         }, {
+        //             value: Number.MAX_SAFE_INTEGER,
+        //             color: 'red'
+        //         }]
+        //     }
+        // },
+        series: [
+            {
+                // Threshold Zones only apply to this series
                 zones: [{
                     value: chart_config.min_threshold,
                     color: 'red'
@@ -61,8 +76,10 @@ function drawUpdatedPlotThresholds(chart_id) {
                     value: Number.MAX_SAFE_INTEGER,
                     color: 'red'
                 }]
+            },
+            {
             }
-        }
+        ]
     });
 }
 
@@ -157,16 +174,17 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
             series: {
                 stickyTracking: false,
                 cursor: 'pointer',
-                zones: [{
-                    value: config.min_threshold,
-                    color: 'red'
-                }, {
-                    value: config.max_threshold,
-                    color: 'blue'
-                }, {
-                    value: Number.MAX_SAFE_INTEGER,
-                    color: 'red'
-                }]
+                // Apply zones to all series
+                // zones: [{
+                //     value: config.min_threshold,
+                //     color: 'red'
+                // }, {
+                //     value: config.max_threshold,
+                //     color: 'blue'
+                // }, {
+                //     value: Number.MAX_SAFE_INTEGER,
+                //     color: 'red'
+                // }]
             }
         },
         tooltip: {
@@ -186,23 +204,51 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
                     x = JSON.stringify(x_raw);
                     x = x.substring(1, x.length-2);
                 }
+                const series_name = this.series.name;
                 const dt = new Date(Date.parse(x));
                 const dt_str = monthLabels[dt.getMonth()] + " " + dt.getDate() + 
                 " "+ (dt.getHours() + 4) + ":"+ dt.getMinutes()+ ":"+ dt.getSeconds();
-                return dt_str + '<br>' + this.y.toFixed(2) + y_axis_unit;
+                return series_name + '<br>' + dt_str + '<br>' + this.y.toFixed(2) + y_axis_unit;
             }
         },
-        series: [{
-            name: 'Sensor Data',
-            type: 'line', // spline
-            data: data_arr,
-            marker: {
-                //fillColor: 'white', // Set marker fill color
-                lineWidth: 1,
-                lineColor: 'black',
-                //lineColor: Highcharts.getOption().colors[0]
+        series: [
+            {
+                // TODO: Derive this name from params
+                name: 'Internal Sensor Data',
+                type: 'line', // spline
+                data: data_arr,
+                marker: {
+                    //fillColor: 'white', // Set marker fill color
+                    lineWidth: 1,
+                    lineColor: 'black',
+                    //lineColor: Highcharts.getOption().colors[0]
+                },
+                lineWidth: 1.5,
+                // Threshold Zones only apply to this series
+                zones: [{
+                    value: config.min_threshold,
+                    color: 'red'
+                }, {
+                    value: config.max_threshold,
+                    color: 'blue'
+                }, {
+                    value: Number.MAX_SAFE_INTEGER,
+                    color: 'red'
+                }]
             },
-            lineWidth: 1.5,
-        }]
+            {
+                // TODO: Derive this name from params
+                name: 'External Sensor Data',
+                type: 'line', // spline
+                data: data_arr,
+                marker: {
+                    fillColor: 'white', // Set marker fill color
+                    lineWidth: 1,
+                    lineColor: 'black',
+                },
+                lineWidth: 1.5,
+                color: 'black',
+            }
+        ]
     });
 }
