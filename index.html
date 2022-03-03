@@ -69,47 +69,45 @@
       </div>
     </div>
 
-    <!-- Not currently using -->
-    <!-- <div class="chart-container chart-container-layout1">
-
+    <div class="chart-container chart-container-layout1">
+      <!-- Actual Chart -->
       <figure class="chart-figure">
-        <div id="chart-external-humidity"></div>
+        <div id="chart-water-temp"></div>
       </figure>
-
+      <!-- Threshold Forms for Chart -->
       <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="external-humidity-max-threshold-form" autocomplete="off">
-          <label for="external-humidity-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="external-humidity-max-threshold" id="external-humidity-max-threshold">
+        <form class="chart-threshold-form chart-threshold-form-layout1" id="water-temp-max-threshold-form" autocomplete="off">
+          <label for="water-temp-max-threshold">Max Threshold: </label>
+          <input type="number" class="config-input" name="water-temp-max-threshold" id="water-temp-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="external-humidity-min-threshold-form" autocomplete="off">
-          <label for="external-humidity-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="external-humidity-min-threshold" id="external-humidity-min-threshold">
+        <form class="chart-threshold-form chart-threshold-form-layout1" id="water-temp-min-threshold-form" autocomplete="off">
+          <label for="water-temp-min-threshold">Min Threshold: </label>
+          <input type="number" class="config-input" name="water-temp-min-threshold" id="water-temp-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
       </div>
     </div>
 
-
     <div class="chart-container chart-container-layout1">
-
+      <!-- Actual Chart -->
       <figure class="chart-figure">
-        <div id="chart-external-air-temp"></div>
+        <div id="chart-soil-temp"></div>
       </figure>
-
+      <!-- Threshold Forms for Chart -->
       <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="external-air-temp-max-threshold-form" autocomplete="off">
-          <label for="external-air-temp-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="external-air-temp-max-threshold" id="external-air-temp-max-threshold">
+        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-temp-max-threshold-form" autocomplete="off">
+          <label for="soil-temp-max-threshold">Max Threshold: </label>
+          <input type="number" class="config-input" name="soil-temp-max-threshold" id="soil-temp-max-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="external-air-temp-min-threshold-form" autocomplete="off">
-          <label for="external-air-temp-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="external-air-temp-min-threshold" id="external-air-temp-min-threshold">
+        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-temp-min-threshold-form" autocomplete="off">
+          <label for="soil-temp-min-threshold">Min Threshold: </label>
+          <input type="number" class="config-input" name="soil-temp-min-threshold" id="soil-temp-min-threshold">
           <button type="submit" class="config-submit-btn">Submit</button>
         </form>
       </div>
-    </div> -->
+    </div>
 
     <!-- Chart Container -->
     <div class="chart-container chart-container-layout1">
@@ -162,18 +160,20 @@
       <div class="info-panel-tab" id="plant-tab">Plant Info</div>
       <div class="info-panel-tab" id="about-tab">About</div>
     </div>
-    <div class="info-tab" id="help-tab-content">
+    <div class="info-tab" id="help-info-tab">
       Describe what each chart means and what actuators they correspond to when sensor values are outside the acceptable threshold.
     </div>
-    <div class="hidden info-tab" id="maintenance-tab-content">
+    <div class="hidden info-tab" id="maintenance-info-tab">
       Have a section for each type of maintenance (water level, filters, etc.) to inform user about that
       can be 'activated' in some way to indicate that maintenance is required.
+      <div class="maintenance-content" id="maintenance-wl"></div>
+      <div class="maintenance-content" id="maintenance-ft"></div>
     </div>
-    <div class="hidden info-tab" id="plant-tab-content">
+    <div class="hidden info-tab" id="plant-info-tab">
       Information about the plant that the greenhouse is currently being used to grow (entered by user).  For this project, I will
       just hard code this section with Cobra Lily info (ideal environment, thresholds, etc.)
     </div>
-    <div class="hidden info-tab" id="about-tab-content">
+    <div class="hidden info-tab" id="about-info-tab">
       About us/the project - don't know if we need this
     </div>
   </div>

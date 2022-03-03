@@ -3,10 +3,10 @@ const maintenance_tab = document.getElementById("maintenance-tab");
 const plant_tab = document.getElementById("plant-tab");
 const about_tab = document.getElementById("about-tab");
 
-const help_content = document.getElementById("help-tab-content");
-const maintenance_content = document.getElementById("maintenance-tab-content");
-const plant_content = document.getElementById("plant-tab-content");
-const about_content = document.getElementById("about-tab-content");
+const help_content = document.getElementById("help-info-tab");
+const maintenance_content = document.getElementById("maintenance-info-tab");
+const plant_content = document.getElementById("plant-info-tab");
+const about_content = document.getElementById("about-info-tab");
 
 const tabs = [];
 tabs.push(help_tab);

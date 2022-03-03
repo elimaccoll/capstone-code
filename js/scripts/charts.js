@@ -60,6 +60,9 @@ function setup() {
     setupChart("chart-internal-air-temp", "it", "Greenhouse Air Temperature", "Temperature (°C)", "°C", 0, 100, 20, 30); 
     setupChart("chart-internal-humidity", "ih", "Greenhouse Humidity", "% Humidity", '%', 0, 100, 40, 50);
 
+    setupChart("chart-water-temp", "wt", "Water Temperature", "Temperature (°C)", '°C', 0, 100, 20, 30);
+    setupChart("chart-soil-temp", "st", "Soil Temperature", "Temperature (°C)", '°C', 0, 100, 20, 30);
+
     // TODO: BETTER OPTION - Add a second series to air temp and humidity plots (series 1 -internal, series 2 - external)
     // setupChart("chart-external-air-temp", "et", "External Air Temperature", "Temperature (°C)", '%', 0, 100, 0, 100);
     // setupChart("chart-external-humidity", "eh", "External Humidity", "% Humidity", '%', 0, 100, 0, 100);
