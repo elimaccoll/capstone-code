@@ -11,6 +11,28 @@ let testing = !active;
 // TODO: Do the same thing for humidity (And any other sensor with internal and external values)
 // TODO: Update route names too
 
+function handleMaintenance(maint_msg) {
+    // 1. Parse maint msg for type (first 2 chars)
+    let maint_type = maint_msg.substring(0, 2);
+    switch(maint_type) {
+        case "wl":
+            let wl_element = document.getElementById("maintenance-wl");
+            let wl_content = maint_msg.substring(3); // Don't want to include the ':'
+            wl_element.textContent = `Water Level: ${wl_content}%`;
+            setWaterLevel(wl_content);
+            break;
+        case "ft":
+            let ft_element = document.getElementById("maintenance-ft");
+            let ft_content = maint_msg.substring(3); // Don't want to include the ':'
+            ft_element.textContent = ft_content;
+            setFilterTime(ft_content);
+            break;
+        default:
+            console.log("Unrecognized maintenance type.");
+            break;
+    }
+}
+
 if (active) {
     // Maintenance
     setInterval(function ( ) {
@@ -18,13 +40,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let maint_msg = this.responseText;
-                // 1. Parse maint msg for type (first 2 chars)
-                let maint_type = maint_msg.substring(0, 2);
-                // 2. Use maint msg type to get the corresponding DOM element
-                let maint_element = document.getElementById(`maintenance-${maint_type}`);
-                // 3. Write the maint msg (not including type) to textContent
-                let maint_content = maint_msg.substring(2);
-                maint_element.textContent = maint_content;
+                handleMaintenance(maint_msg);
             }
         };
         xhttp.open("GET", "/maintenance", true);
@@ -112,4 +128,63 @@ if (testing) {
         let st_data = Math.random() * 20 + 15;
         addPlotPoint("chart-soil-temp", st_data);
     }, 3000);
+
+    // Testing Maintenance Messages
+    setInterval(() => {
+        let water_level = Math.round(Math.random() * 100);
+        let maint_msg = `wl:${water_level}`;
+        handleMaintenance(maint_msg);
+    }, 5000);
+    let filter_time = 0;
+    setInterval(() => {
+        // let filter_time = Math.round(Math.random() * 10);
+        filter_time = (filter_time + 1) % 11;
+        let maint_msg = `ft:${filter_time}`;
+        handleMaintenance(maint_msg);
+    }, 1000);
+}
+
+
+function setFilterTime(filter_time) {
+    var elem = document.getElementById("maintenance-ft-container");
+    let filter_time_val = parseInt(filter_time);
+    let color;
+    if (filter_time_val < 5) {
+        color = "lightgreen";
+    }
+    else if (filter_time < 8) {
+        color = "yellow";
+    }
+    else {
+        color = "red";
+    }
+    elem.style.backgroundColor = color;
+
+    return;
+}
+
+function setWaterLevel(water_level) {
+    let time_to_fill = 10;
+    var elem = document.getElementById("wl-fill");
+    let curr_height = elem.style.height;
+    if (curr_height) {
+        curr_height = parseInt(curr_height.substring(0, curr_height.length - 1));
+    }
+    let new_height = Math.round(parseFloat(water_level));
+
+    var id = setInterval(fill, time_to_fill);
+    function fill() {
+      if (curr_height == new_height) {
+        clearInterval(id);
+      }
+      if (new_height < curr_height) {
+          curr_height--;
+      }
+      else if (new_height > curr_height) {
+        curr_height++;
+      }
+      elem.style.height = curr_height + '%';
+      // Write text content inside of fill bar
+      // elem.textContent = curr_height * 1 + '%';
+    }
 }

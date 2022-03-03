@@ -166,8 +166,20 @@
     <div class="hidden info-tab" id="maintenance-info-tab">
       Have a section for each type of maintenance (water level, filters, etc.) to inform user about that
       can be 'activated' in some way to indicate that maintenance is required.
-      <div class="maintenance-content" id="maintenance-wl"></div>
-      <div class="maintenance-content" id="maintenance-ft"></div>
+      <div id="maintenance-content-container">
+        <div class="maintenance-content-card">
+          <span id="maintenance-wl">Water Level: </span>
+          <div id="wl-resevoir">
+            <div id="wl-fill"></div>
+          </div>
+        </div>
+        <div class="maintenance-content-card">
+          Filters - Time since last change (days)
+          <div id="maintenance-ft-container">
+            <div id="maintenance-ft"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="hidden info-tab" id="plant-info-tab">
       Information about the plant that the greenhouse is currently being used to grow (entered by user).  For this project, I will
