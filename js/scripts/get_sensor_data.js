@@ -11,6 +11,7 @@ let testing = !active;
 // TODO: Do the same thing for humidity (And any other sensor with internal and external values)
 // TODO: Update route names too
 
+
 function handleMaintenance(maint_msg) {
     // 1. Parse maint msg for type (first 2 chars)
     let maint_type = maint_msg.substring(0, 2);

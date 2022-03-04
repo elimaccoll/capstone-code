@@ -1,5 +1,6 @@
 import {sendPlotThresholds} from"./send_config.js"
 import { getChartInfo, getFormIDFromChartID } from "./charts.js"
+import { bufferData, storeThreshold } from "./datastore.js";
 
 // TODO: response Highcharts - https://www.highcharts.com/demo/stock/responsive
 // Buttons for different premade display formats
@@ -8,8 +9,10 @@ import { getChartInfo, getFormIDFromChartID } from "./charts.js"
 export function addPlotPoint(chart_id, data_point, series_ind = 0) {
     let chart = getChartInfo(chart_id)["chart"];
     let time = new Date(Date.now());
+    let plot_point = {x:time, y:data_point};
     // TODO: Fix time
-    chart.series[series_ind].addPoint({x:time, y:data_point});
+    chart.series[series_ind].addPoint(plot_point);
+    bufferData(chart_id, plot_point, series_ind);
 }
 
  /* Verifies given threshold values for the given chart
@@ -114,6 +117,8 @@ export function handleThresholdUpdate(chart_id, is_min) {
         alert(`Invalid ${form_id} threshold.`);
         return;
     }
+    // Store in localstorage for persistence
+    storeThreshold(chart_id, getChartInfo(chart_id)["config"].min_threshold, getChartInfo(chart_id)["config"].max_threshold);
     // Update drawn threshold zone for new thresholds on the plot
     drawUpdatedPlotThresholds(chart_id);
     // Send updated thresholds to arduino
@@ -122,7 +127,7 @@ export function handleThresholdUpdate(chart_id, is_min) {
 
 
 // Creates initial plot
-export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, config, data_arr) {
+export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, config, data_arr1, data_arr2 = []) {
     return Highcharts.chart(chart_id, {
         // TODO: Timezone is still wrong
         global: {
@@ -216,7 +221,7 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
                 // TODO: Derive this name from params
                 name: 'Internal Sensor Data',
                 type: 'line', // spline
-                data: data_arr,
+                data: data_arr1,
                 marker: {
                     //fillColor: 'white', // Set marker fill color
                     lineWidth: 1,
@@ -240,7 +245,7 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
                 // TODO: Derive this name from params
                 name: 'External Sensor Data',
                 type: 'line', // spline
-                data: data_arr,
+                data: data_arr2,
                 marker: {
                     fillColor: 'white', // Set marker fill color
                     lineWidth: 1,
