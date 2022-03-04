@@ -4,3 +4,7 @@ export function sendPlotThresholds(type, min_threshold, max_threshold) {
     xhttp.open("GET", `/threshold_control?type=${type}&min=${min_threshold}&max=${max_threshold}`, true);
     xhttp.send();
 }
+
+// TODO: Send initial config message (initial thresholds loaded from state)
+
+// TODO: Light control maybe

@@ -57,8 +57,8 @@ function setupChart(chart_id, msg_id, chart_title, y_axis_title, unit, min_bound
 
 function setup() {
     // The chart-id must match the DOM elements
-    setupChart("chart-internal-air-temp", "it", "Greenhouse Air Temperature", "Temperature (°C)", "°C", 0, 100, 20, 30); 
-    setupChart("chart-internal-humidity", "ih", "Greenhouse Humidity", "% Humidity", '%', 0, 100, 40, 50);
+    setupChart("chart-internal-air-temp", "it", "Air Temperature", "Temperature (°C)", "°C", 0, 100, 20, 30); 
+    setupChart("chart-internal-humidity", "ih", "Humidity", "% Humidity", '%', 0, 100, 40, 50);
 
     setupChart("chart-water-temp", "wt", "Water Temperature", "Temperature (°C)", '°C', 0, 100, 20, 30);
     setupChart("chart-soil-temp", "st", "Soil Temperature", "Temperature (°C)", '°C', 0, 100, 20, 30);

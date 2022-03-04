@@ -105,10 +105,10 @@ if (testing) {
     });
     // Temperature and Humidity
     setInterval(() => {
-        addPlotPoint("chart-internal-humidity", data);
-        addPlotPoint("chart-internal-humidity", data + 30, 1); // Plotting points on multiple series on same graph
-        addPlotPoint("chart-internal-air-temp", data + (Math.random() * 10 + 50));
-        addPlotPoint("chart-internal-air-temp", data + 30, 1); // Plotting points on multiple series on same graph
+        addPlotPoint("chart-internal-humidity", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
+        addPlotPoint("chart-internal-humidity", data + (Math.random() * 10 + 30));
+        addPlotPoint("chart-internal-air-temp", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
+        addPlotPoint("chart-internal-air-temp", data + (Math.random() * 10 + 30));
     }, 1000);
     // Soil Moisture
     setInterval(() => {
@@ -134,7 +134,7 @@ if (testing) {
         let water_level = Math.round(Math.random() * 100);
         let maint_msg = `wl:${water_level}`;
         handleMaintenance(maint_msg);
-    }, 5000);
+    }, 3000);
     let filter_time = 0;
     setInterval(() => {
         // let filter_time = Math.round(Math.random() * 10);
@@ -145,14 +145,15 @@ if (testing) {
 }
 
 
+// Maintenance Display - Control
 function setFilterTime(filter_time) {
     var elem = document.getElementById("maintenance-ft-container");
     let filter_time_val = parseInt(filter_time);
     let color;
-    if (filter_time_val < 5) {
+    if (filter_time_val < 7) {
         color = "lightgreen";
     }
-    else if (filter_time < 8) {
+    else if (filter_time < 9) {
         color = "yellow";
     }
     else {
