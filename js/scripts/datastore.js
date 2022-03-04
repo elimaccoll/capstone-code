@@ -2,16 +2,17 @@ import { setupChart } from "./charts.js";
 
 const DATA_BUFFER = 20; // Store a buffer of 20 data points for each plot
 
-// USED FOR TESTING - Clears local storage
-const clear = false;
-if (clear) {
+// Clear local storage
+const clear_btn = document.getElementById("clear-data-btn");
+clear_btn.addEventListener('click', () => {
     window.onload = () => {
         localStorage.clear();
     }
     window.onunload = () => {
         localStorage.clear();
     }
-}
+    window.location.reload();
+});
 
 // Store current thresholds in local storage - Called whenever one is changed
 export function storeThreshold(chart_id, min, max) {

@@ -247,6 +247,13 @@
   margin-top: 10px;
 }
 
+#clear-data-btn {
+  margin-top: 10px;
+  width: 150px;
+  height: 150px;
+  border-radius: 20%;
+}
+
 /* Get rid of arrows in number input boxes */
 /* input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button {
