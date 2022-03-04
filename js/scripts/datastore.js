@@ -1,4 +1,5 @@
 import { setupChart } from "./charts.js";
+import { sendPlotThresholds } from "./send_config.js";
 
 const DATA_BUFFER = 20; // Store a buffer of 20 data points for each plot
 
@@ -138,7 +139,7 @@ function parseLoadedData(data_arr) {
 }
 
 // Load data on page load
-window.onload = () => {
+window.onload = async () => {
     // TODO: 'min' and 'max' here would be the default thesholds for the corresponding plot
     let load_int_air_temp = {"min": 20, "max": 30, "data": []};
     let int_air_temp_data = [];
@@ -208,6 +209,20 @@ window.onload = () => {
     }
     else { localStorage.ext_humidity = JSON.stringify(ext_humidity_data); }
 
+    // Send initial plot thresholds so arduino and node mcu are in sync
+    sendPlotThresholds("it", load_int_air_temp.min, load_int_air_temp.max);
+    await delay(100);
+    sendPlotThresholds("ih", load_int_humidity.min, load_int_humidity.max);
+    await delay(100);
+    sendPlotThresholds("wt", load_water_temp.min, load_water_temp.max);
+    await delay(100);
+    sendPlotThresholds("st", load_soil_temp.min, load_soil_temp.max);
+    await delay(100);
+    sendPlotThresholds("td", load_tds.min, load_tds.max);
+    await delay(100);
+    sendPlotThresholds("sm", load_soil_moisture.min, load_soil_moisture.max);
+    await delay(100);
+
     // The chart-id must match the DOM elements
     // TODO: remove internal from first 2 charts
     setupChart("chart-internal-air-temp", "it", "Air Temperature", "Temperature (°C)", "°C", 0, 100, load_int_air_temp.min, load_int_air_temp.max, int_air_temp_data, ext_air_temp_data); 
@@ -216,4 +231,8 @@ window.onload = () => {
     setupChart("chart-soil-temp", "st", "Soil Temperature", "Temperature (°C)", '°C', 0, 100, load_soil_temp.min, load_soil_temp.max, soil_temp_data);
     setupChart("chart-tds", "td", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, load_tds.min, load_tds.max, tds_data);
     setupChart("chart-soil-moisture", "sm", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, load_soil_moisture.min, load_soil_moisture.max, soil_moisture_data);
+}
+
+function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
 }

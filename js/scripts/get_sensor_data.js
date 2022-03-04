@@ -3,7 +3,7 @@ import { addPlotPoint } from "./charts_util.js";
 // TODO: Line up request intervals with arduino read intervals
 var interval = 3000; // 3 seconds
 
-let active = false;
+let active = true;
 let testing = !active;
 
 // TODO: Change chart-internal-air-temp to just air temp and simply determine which series to add the point to based on
@@ -41,7 +41,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let maint_msg = this.responseText;
-                handleMaintenance(maint_msg);
+                if (maint_msg) { handleMaintenance(maint_msg); }
             }
         };
         xhttp.open("GET", "/maintenance", true);
@@ -68,7 +68,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let internal_humidity = parseFloat(this.responseText);
-                addPlotPoint("chart-humidity", internal_humidity);
+                addPlotPoint("chart-internal-humidity", internal_humidity);
             }
         };
         xhttp.open("GET", "/internal_humidity", true);
@@ -96,6 +96,20 @@ if (active) {
         let st_data = Math.random() * 20 + 15;
         addPlotPoint("chart-soil-temp", st_data);
     }, 3000);
+
+    // FAKE MAINTENANCE VALUES FOR DEMO
+    setInterval(() => {
+        let water_level = Math.round(Math.random() * 100);
+        let maint_msg = `wl:${water_level}`;
+        handleMaintenance(maint_msg);
+    }, 3000);
+    let filter_time = 0;
+    setInterval(() => {
+        // let filter_time = Math.round(Math.random() * 10);
+        filter_time = (filter_time + 1) % 11;
+        let maint_msg = `ft:${filter_time}`;
+        handleMaintenance(maint_msg);
+    }, 1000);
 }
 
 if (testing) {
