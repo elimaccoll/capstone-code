@@ -9,6 +9,7 @@
 SoftwareSerial arduinoSerial(12, 13);
 
 #define EOF '\n'
+#define VREF 5.0 // analog reference voltage of the ADC
 
 
 // TODO: Replace with actual sensor pin numbers
@@ -106,16 +107,20 @@ float readExternalHumidity() {
   // TODO: Read from whichever humidity sensor is outside enclosure
   return;
 }
-// TODO: Finish converting this
+// TODO: Test this
 float readTDS() {
   float analog_tds = analogRead(TDS_PIN);
-  return analog_tds;
+  float voltage = analog_tds * (float)VREF / 1024.0; // convert to voltage value
+  float curr_temp = readInternalAirTemp();
+  float compensation_coeff = 1.0 + 0.02 * (curr_temp - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
+  float compensation_voltage = voltage / compensation_coeff; //temperature compensation
+  float tds_value = (133.42 * compensation_voltage * compensation_voltage * compensation_voltage - 255.86 * compensation_voltage * compensation_voltage + 857.39 * compensation_voltage) * 0.5; //convert voltage value to tds value
+  return tds_value;
 }
 float readSoilMoisture() {
   float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
   return soil_moisture;
 }
-// TODO: Make this return an array of floats? 
 float readOneWire() {
   ONE_WIRE.requestTemperatures();
   float avg_tempC = 0;
@@ -127,9 +132,13 @@ float readOneWire() {
   avg_tempC = avg_tempC/ONE_WIRE_COUNT;
   return avg_tempC;
 }
-float readWaterLevel() {
-  // TODO: Read water level sensor
-  // return the value
+float readLiquidLevel() {
+  // TODO: 
+  // 1. Check the water level
+  // 2. Do we want to estimate water level?
+  // - If yes, return the estimate as a float
+  // - If no, have this return a booelan (false means resevoir is running low)
+
   return;
 }
 
@@ -239,10 +248,10 @@ void processMessage(String msg) {
 
 char c; // Used for reading characters over serial connection
 String dataIn; // Used to build strings using the characters (c) read over serial connection
-int timer = 0; // Used to read sensors on different intervals
+int clk = 0; // Used to read sensors on different intervals
 
-// TODO: Calculate this value instead of setting it?
-const int TIMER_RESET = 10; // Reset timer to 0 when it reaches this value (read time of sensor with max read time)
+// TODO: Calculate this as max(all read times) + 1 | Manually set for now
+const int CLK_RESET = 11; // Reset timer to 0 when it reaches this value (read time of sensor with max read time)
 
 // TODO: Pick amount of time to change filters
 // const int FILTER_SWAP = 
@@ -253,11 +262,11 @@ void loop() {
   current_time = millis();
   
   // Read sensor data on different intervals
-  if (timer % READ_INTERNAL_AIR_TEMP == 0) {
+  if (clk % READ_INTERNAL_AIR_TEMP == 0) {
     float int_air_temp = readInternalAirTemp();
     sendDataMsg("it", int_air_temp);
   }
-  if (timer % READ_INTERNAL_HUMIDITY == 0) {
+  if (clk % READ_INTERNAL_HUMIDITY == 0) {
     float int_humidity = readInternalHumidity();
 
     // Control loop logic for internal humidity
@@ -270,37 +279,39 @@ void loop() {
     
     sendDataMsg("ih", int_humidity);
   }
-  if (timer % READ_EXTERNAL_AIR_TEMP == 0) {
+  if (clk % READ_EXTERNAL_AIR_TEMP == 0) {
     float ext_air_temp = readExternalAirTemp();
 //    sendDataMsg("et", ext_air_temp);
   }
-  if (timer % READ_EXTERNAL_HUMIDITY == 0) {
+  if (clk % READ_EXTERNAL_HUMIDITY == 0) {
     float ext_humidity = readExternalHumidity();
 //    sendDataMsg("eh", ext_humidity);
   }
-  if (timer % READ_SOIL_MOISTURE == 0) {
+  if (clk % READ_SOIL_MOISTURE == 0) {
     float soil_moisture = readSoilMoisture();
 //    sendDataMsg("sm", soil_moisture);
   }
-  if (timer % READ_TDS == 0) {
+  if (clk % READ_TDS == 0) {
     float tds = readTDS();
 //    sendDataMsg("td", tds);
   }
-  if (timer % READ_WATER_LEVEL == 0) {
-    float water_level = readWaterLevel();
-    // TODO: Send water level on a consistent interval so user can see resevoir percentage
+  if (clk % READ_WATER_LEVEL == 0) {
+    // TODO: Update this depending on how we decide to use liquid level info
+    float water_level = readLiquidLevel();
+    // TODO: Send water level on a consistent interval so user can see when resevoir is low
 
     // Estimate water level
     float perc_water_level;
     
     // sendMaintenanceMsg("wl", String(perc_water_level));
   }
-//  if ((current_time - filter_timer) >= FILTER_SWAP) {
-//    unsigned long time_since_last_filter_change = (current_time - filter_timer);
-//    // Send filter timer maintenancae to be displayed on webpage
-//    // sendMaintenanceMsg("ft", String(time_since_last_filter_change)); // Not sure what the msg should be/if there needs to be one
-//  }
-  
+ /*
+ if ((current_time - filter_timer) >= FILTER_SWAP) {
+   unsigned long time_since_last_filter_change = (current_time - filter_timer);
+   // Send filter timer maintenance to be displayed on webpage
+   // sendMaintenanceMsg("ft", String(time_since_last_filter_change)); // Not sure what the msg should be/if there needs to be one
+ }
+ */ 
 
   // Receive messages over Serial connection
   while (arduinoSerial.available() > 0) {
@@ -319,6 +330,6 @@ void loop() {
     dataIn = "";
   }
 
-  timer += 1;
+  clk = (clk + 1) % CLK_RESET;
   delay(1000); // Wait 1 second between each reading
 }
