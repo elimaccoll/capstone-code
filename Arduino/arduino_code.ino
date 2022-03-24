@@ -4,7 +4,6 @@
 #include <dht.h>
 
 // TODO: Do we want to use some sort of algorithm (median filtering algorithm - see TDS sensor code)
-// TODO: Use millis() for reading on different intervals - number of milliseconds since started runing current program
 
 SoftwareSerial arduinoSerial(12, 13);
 
@@ -12,7 +11,7 @@ SoftwareSerial arduinoSerial(12, 13);
 #define VREF 5.0 // analog reference voltage of the ADC
 
 
-// TODO: Replace with actual sensor pin numbers
+// TODO: Replace with actual sensor pin numbers when we pick them
 // Sensor Pins
 const int LED_CONTROL_PIN = 8;
 
@@ -34,37 +33,39 @@ const int READ_INTERNAL_AIR_TEMP = 1;
 const int READ_INTERNAL_HUMIDITY = 1;
 const int READ_EXTERNAL_AIR_TEMP = 3;
 const int READ_EXTERNAL_HUMIDITY = 3;
+const int READ_SOIL_TEMP = 3;
+const int READ_WATER_TEMP = 3;
 const int READ_SOIL_MOISTURE = 5;
 const int READ_TDS = 5;
 const int READ_WATER_LEVEL = 10;
 
 float filter_timer;
 
-// Initial control loop values - Have these intially match the js values
+// Initial control loop values - make these match the default javascript thresholds
 float int_humidity_max = 50;
 float int_humidity_min = 40;
 
 float int_air_temp_max = 30;
 float int_air_temp_min = 20;
 
-float soil_temp_max;
-float soil_temp_min;
+float soil_temp_max = 15;
+float soil_temp_min = 5;
 
-float soil_moisture_max;
-float soil_moisture_min;
+float soil_moisture_max = 60;
+float soil_moisture_min = 50;
 
-float water_temp_max;
-float water_temp_min;
+float water_temp_max = 15;
+float water_temp_min = 5;
 
-float tds_max;
-float tds_min;
+float tds_max = 100;
+float tds_min = 0;
 
 
 void setup() {
   // Serial to print
   Serial.begin(115200);
 
-  // TODO: Replace with actual sensor and actuator setup - used for demo
+  // TODO: Replace with actual sensor and actuator setup when we connect them
   pinMode(LED_CONTROL_PIN, OUTPUT);
 
   pinMode(TDS_PIN, INPUT);
@@ -117,10 +118,24 @@ float readTDS() {
   float tds_value = (133.42 * compensation_voltage * compensation_voltage * compensation_voltage - 255.86 * compensation_voltage * compensation_voltage + 857.39 * compensation_voltage) * 0.5; //convert voltage value to tds value
   return tds_value;
 }
+
+float readWaterTemp() {
+  // TODO: Read whichever temp sensor is for water
+  float water_temp = 0;
+  return water_temp;
+}
+
+float readSoilTemp() {
+  // TODO: Read whichever temp sensor is for soil
+  float soil_temp = 0;
+  return soil_temp;
+}
+
 float readSoilMoisture() {
   float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
   return soil_moisture;
 }
+
 float readOneWire() {
   ONE_WIRE.requestTemperatures();
   float avg_tempC = 0;
@@ -137,7 +152,7 @@ float readLiquidLevel() {
   // 1. Check the water level
   // 2. Do we want to estimate water level?
   // - If yes, return the estimate as a float
-  // - If no, have this return a booelan (false means resevoir is running low)
+  // - If no, have this return a boolean (false means resevoir is running low)
 
   return;
 }
@@ -266,6 +281,7 @@ void loop() {
     float int_air_temp = readInternalAirTemp();
     sendDataMsg("it", int_air_temp);
   }
+
   if (clk % READ_INTERNAL_HUMIDITY == 0) {
     float int_humidity = readInternalHumidity();
 
@@ -279,22 +295,37 @@ void loop() {
     
     sendDataMsg("ih", int_humidity);
   }
+
   if (clk % READ_EXTERNAL_AIR_TEMP == 0) {
     float ext_air_temp = readExternalAirTemp();
 //    sendDataMsg("et", ext_air_temp);
   }
+
   if (clk % READ_EXTERNAL_HUMIDITY == 0) {
     float ext_humidity = readExternalHumidity();
 //    sendDataMsg("eh", ext_humidity);
   }
+
+  if (clk % READ_WATER_TEMP == 0) {
+    float water_temp = readWaterTemp();
+//    sendDataMsg("wt", water_temp);
+  }
+
+  if (clk % READ_SOIL_TEMP == 0) {
+    float soil_temp = readSoilTemp();
+//    sendDataMsg("st", soil_temp);
+  }
+
   if (clk % READ_SOIL_MOISTURE == 0) {
     float soil_moisture = readSoilMoisture();
 //    sendDataMsg("sm", soil_moisture);
   }
+
   if (clk % READ_TDS == 0) {
     float tds = readTDS();
 //    sendDataMsg("td", tds);
   }
+
   if (clk % READ_WATER_LEVEL == 0) {
     // TODO: Update this depending on how we decide to use liquid level info
     float water_level = readLiquidLevel();
@@ -305,6 +336,7 @@ void loop() {
     
     // sendMaintenanceMsg("wl", String(perc_water_level));
   }
+  // TODO: Check filter time
  /*
  if ((current_time - filter_timer) >= FILTER_SWAP) {
    unsigned long time_since_last_filter_change = (current_time - filter_timer);

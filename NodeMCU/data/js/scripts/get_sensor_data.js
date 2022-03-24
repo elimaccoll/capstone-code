@@ -11,6 +11,17 @@ let testing = !active;
 // TODO: Do the same thing for humidity (And any other sensor with internal and external values)
 // TODO: Update route names too
 
+// Read intervals for different sensor values - Match the arduino timings
+const READ_INTERNAL_AIR_TEMP = 1
+const READ_INTERNAL_HUMIDITY = 1
+const READ_EXTERNAL_AIR_TEMP = 3;
+const READ_EXTERNAL_HUMIDITY = 3;
+const READ_WATER_TEMP = 3;
+const READ_SOIL_TEMP = 3;
+const READ_SOIL_MOISTURE = 5;
+const READ_TDS = 5;
+const READ_MAINTENANCE = 10;
+
 
 function handleMaintenance(maint_msg) {
     // 1. Parse maint msg for type (first 2 chars)
@@ -34,6 +45,7 @@ function handleMaintenance(maint_msg) {
     }
 }
 
+// TODO: Remove this conditional when done testing
 if (active) {
     // Maintenance
     setInterval(function ( ) {
@@ -46,11 +58,12 @@ if (active) {
         };
         xhttp.open("GET", "/maintenance", true);
         xhttp.send();
-    }, 1000 ) ;
+    }, READ_MAINTENANCE * 1000 ) ;
     
 
-
     // Request sensor data on their specific routes
+
+    // Internal Air Temperature
     setInterval(function ( ) {
     var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -61,8 +74,9 @@ if (active) {
         };
         xhttp.open("GET", "/internal_air_temp", true);
         xhttp.send();
-    }, 1000 ) ;
+    }, READ_INTERNAL_AIR_TEMP * 1000 ) ;
 
+    // Internal Humidity
     setInterval(function ( ) {
     var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -73,43 +87,85 @@ if (active) {
         };
         xhttp.open("GET", "/internal_humidity", true);
         xhttp.send();
-    }, 1000 ) ;
+    }, READ_INTERNAL_HUMIDITY * 1000 ) ;
 
-    // FAKE DATA FOR DEMO
-    // Soil Moisture
-    setInterval(() => {
-        let sm_data = Math.random() * 30 + 40;
-        addPlotPoint("chart-soil-moisture", sm_data);
-    }, 3000);
-    // TDS
-    setInterval(() => {
-        let tds_data = Math.random() * 70 + 15;
-        addPlotPoint("chart-tds", tds_data);
-    }, 5000);
+    // External Air Temperature
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let external_air_temp = parseFloat(this.responseText);
+                    addPlotPoint("chart-internal-air-temp", external_air_temp);
+                }
+            };
+            xhttp.open("GET", "/external_air_temp", true);
+            xhttp.send();
+        }, READ_EXTERNAL_AIR_TEMP * 1000 ) ;
+
+    // External Humidity
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let external_humidity = parseFloat(this.responseText);
+                    addPlotPoint("chart-internal-humidity", external_humidity);
+                }
+            };
+            xhttp.open("GET", "/external_humidity", true);
+            xhttp.send();
+        }, READ_EXTERNAL_HUMIDITY * 1000 ) ;
+    
     // Water Temperature
-    setInterval(() => {
-        let wt_data = Math.random() * 30 + 10;
-        addPlotPoint("chart-water-temp", wt_data);
-    }, 3000);
-    // Soil Temperature
-    setInterval(() => {
-        let st_data = Math.random() * 20 + 15;
-        addPlotPoint("chart-soil-temp", st_data);
-    }, 3000);
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let water_temp = parseFloat(this.responseText);
+                    addPlotPoint("chart-water-temp", water_temp);
+                }
+            };
+            xhttp.open("GET", "/water_temp", true);
+            xhttp.send();
+        }, READ_WATER_TEMP * 1000 ) ;
 
-    // FAKE MAINTENANCE VALUES FOR DEMO
-    setInterval(() => {
-        let water_level = Math.round(Math.random() * 100);
-        let maint_msg = `wl:${water_level}`;
-        handleMaintenance(maint_msg);
-    }, 3000);
-    let filter_time = 0;
-    setInterval(() => {
-        // let filter_time = Math.round(Math.random() * 10);
-        filter_time = (filter_time + 1) % 11;
-        let maint_msg = `ft:${filter_time}`;
-        handleMaintenance(maint_msg);
-    }, 1000);
+    // Soil Temperature
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let soil_temp = parseFloat(this.responseText);
+                    addPlotPoint("chart-soil-temp", soil_temp);
+                }
+            };
+            xhttp.open("GET", "/soil_temp", true);
+            xhttp.send();
+        }, READ_SOIL_TEMP * 1000 ) ;
+
+    // Soil Moisture
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let soil_moisture = parseFloat(this.responseText);
+                    addPlotPoint("chart-soil-moisture", soil_moisture);
+                }
+            };
+            xhttp.open("GET", "/soil_moisture", true);
+            xhttp.send();
+        }, READ_SOIL_MOISTURE * 1000 ) ;
+
+    // TDS
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let tds = parseFloat(this.responseText);
+                    addPlotPoint("chart-tds", tds);
+                }
+            };
+            xhttp.open("GET", "/tds", true);
+            xhttp.send();
+        }, READ_TDS * 1000 ) ;
 }
 
 if (testing) {
@@ -152,7 +208,6 @@ if (testing) {
     }, 3000);
     let filter_time = 0;
     setInterval(() => {
-        // let filter_time = Math.round(Math.random() * 10);
         filter_time = (filter_time + 1) % 11;
         let maint_msg = `ft:${filter_time}`;
         handleMaintenance(maint_msg);
@@ -160,6 +215,7 @@ if (testing) {
 }
 
 
+// Trigger different maintenenace notifications for testing
 // Maintenance Display - Control
 function setFilterTime(filter_time) {
     var elem = document.getElementById("maintenance-ft-container");

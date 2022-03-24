@@ -121,13 +121,37 @@ void setup() {
 
 
   // Routes to send data to web page
-  // Route to send temperature reading
+  // Route to send internal air temperature reading
   server.on("/internal_air_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getInternalAirTemp().c_str());
   });
-  // Route to send humidity reading
+  // Route to send internal humidity reading
   server.on("/internal_humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getInternalHumidity().c_str());
+  });
+  // Route to send external temperature reading
+  server.on("/external_air_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getExternalAirTemp().c_str());
+  });
+  // Route to send external humidity reading
+  server.on("/external_humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getExternalHumidity().c_str());
+  });
+  // Route to send water temperature reading
+  server.on("/water_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getWaterTemp().c_str());
+  });
+  // Route to send soil temperature reading
+  server.on("/soil_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getSoilTemp().c_str());
+  });
+  // Route to send soil moisture reading
+  server.on("/soil_moisture", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getSoilMoisture().c_str());
+  });
+  // Route to send tds reading
+  server.on("/tds", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getTDS().c_str());
   });
 
   // Route to send maintenance notifications
