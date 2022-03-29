@@ -2,15 +2,12 @@ import {sendPlotThresholds} from"./send_config.js"
 import { getChartInfo, getFormIDFromChartID } from "./charts.js"
 import { bufferData, storeThreshold } from "./datastore.js";
 
-// TODO: response Highcharts - https://www.highcharts.com/demo/stock/responsive
-// Buttons for different premade display formats
-
 // Plot new data as it is received - used in get_sensor_data
 export function addPlotPoint(chart_id, data_point, series_ind = 0) {
     let chart = getChartInfo(chart_id)["chart"];
     let time = new Date(Date.now());
     let plot_point = {x:time, y:data_point};
-    // TODO: Fix time
+
     chart.series[series_ind].addPoint(plot_point);
     bufferData(chart_id, plot_point, series_ind);
 }
@@ -51,21 +48,6 @@ function drawUpdatedPlotThresholds(chart_id) {
                 to: chart_config.max_threshold
             }]
         },
-        // Applies zones to all series
-        // plotOptions: {
-        //     series: {
-        //         zones: [{
-        //             value: chart_config.min_threshold,
-        //             color: 'red'
-        //         }, {
-        //             value: chart_config.max_threshold,
-        //             color: 'blue'
-        //         }, {
-        //             value: Number.MAX_SAFE_INTEGER,
-        //             color: 'red'
-        //         }]
-        //     }
-        // },
         series: [
             {
                 // Threshold Zones only apply to this series
@@ -129,7 +111,6 @@ export function handleThresholdUpdate(chart_id, is_min) {
 // Creates initial plot
 export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, config, data_arr1, data_arr2 = []) {
     return Highcharts.chart(chart_id, {
-        // TODO: Timezone is still wrong
         global: {
             UTC: false,
             timezone: "EST",
@@ -173,23 +154,14 @@ export function createPlot(chart_id, plot_title, y_axis_title, y_axis_unit, conf
                 color: 'lightgreen',
                 from: config.min_threshold,
                 to: config.max_threshold
-            }]
+            }],
+            ceiling: config.max_bound,
+            floor: config.min_bound
         },
         plotOptions: {
             series: {
                 stickyTracking: false,
                 cursor: 'pointer',
-                // Apply zones to all series
-                // zones: [{
-                //     value: config.min_threshold,
-                //     color: 'red'
-                // }, {
-                //     value: config.max_threshold,
-                //     color: 'blue'
-                // }, {
-                //     value: Number.MAX_SAFE_INTEGER,
-                //     color: 'red'
-                // }]
             }
         },
         tooltip: {

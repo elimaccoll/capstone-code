@@ -15,16 +15,17 @@ SoftwareSerial arduinoSerial(12, 13);
 // Sensor Pins
 const int LED_CONTROL_PIN = 8;
 
-#define TDS_PIN A1
+#define SOIL_MOISTURE_PIN A1
 
-#define SOIL_MOISTURE_PIN A2
+#define TDS_PIN A2
+
+#define LIQUID_LEVEL_PIN 52
 
 #define ONE_WIRE_PIN 3
 OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature ONE_WIRE(&oneWire);
 int ONE_WIRE_COUNT = 0;
 
-//const int DHT_PIN = 9;
 #define DHT_PIN 9
 dht DHT;
 
@@ -70,6 +71,7 @@ void setup() {
 
   pinMode(TDS_PIN, INPUT);
   pinMode(SOIL_MOISTURE_PIN, INPUT);
+  pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
   ONE_WIRE.begin();
   ONE_WIRE_COUNT = ONE_WIRE.getDeviceCount();
@@ -88,27 +90,27 @@ void setup() {
 
 // Read sensor data
 void readDHT() {
+  // TODO: Read all DHTs
   int chk = DHT.read11(DHT_PIN); 
-  // TODO: Figure out chk codes and verify here
 }
 float readInternalAirTemp() {
-  // readDHT();
-  // return DHT.temperature;
+  // TODO: Average internal air temperature sensors
   return readOneWire();
 }
 float readInternalHumidity() {
+  // TODO: Average internal humidity sensors
   readDHT();
   return DHT.humidity;
 }
 float readExternalAirTemp() {
   // TODO: Read from whichever temp sensor is outside enclosure
-  return;
+  return readOneWire() + random(5, 20);
 }
 float readExternalHumidity() {
   // TODO: Read from whichever humidity sensor is outside enclosure
-  return;
+  readDHT();
+  return DHT.humidity + random(5, 20);
 }
-// TODO: Test this
 float readTDS() {
   float analog_tds = analogRead(TDS_PIN);
   float voltage = analog_tds * (float)VREF / 1024.0; // convert to voltage value
@@ -132,8 +134,10 @@ float readSoilTemp() {
 }
 
 float readSoilMoisture() {
+  // TODO: Not sure if this convertion is right/how we want to display soil moisture
   float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
-  return soil_moisture;
+  float soil_moisture_percent = (float) map(soil_moisture, 0, 1023, 0, 100);
+  return soil_moisture_percent;
 }
 
 float readOneWire() {
@@ -147,14 +151,10 @@ float readOneWire() {
   avg_tempC = avg_tempC/ONE_WIRE_COUNT;
   return avg_tempC;
 }
-float readLiquidLevel() {
-  // TODO: 
-  // 1. Check the water level
-  // 2. Do we want to estimate water level?
-  // - If yes, return the estimate as a float
-  // - If no, have this return a boolean (false means resevoir is running low)
-
-  return;
+int readLiquidLevel() {
+  // Returns 0 when water is low, 1 else
+  int liquid_level = digitalRead(LIQUID_LEVEL_PIN);
+  return liquid_level;
 }
 
 /* ih - Internal humidity (inside enclosure)
@@ -298,12 +298,12 @@ void loop() {
 
   if (clk % READ_EXTERNAL_AIR_TEMP == 0) {
     float ext_air_temp = readExternalAirTemp();
-//    sendDataMsg("et", ext_air_temp);
+    sendDataMsg("et", ext_air_temp);
   }
 
   if (clk % READ_EXTERNAL_HUMIDITY == 0) {
     float ext_humidity = readExternalHumidity();
-//    sendDataMsg("eh", ext_humidity);
+    sendDataMsg("eh", ext_humidity);
   }
 
   if (clk % READ_WATER_TEMP == 0) {
@@ -318,23 +318,17 @@ void loop() {
 
   if (clk % READ_SOIL_MOISTURE == 0) {
     float soil_moisture = readSoilMoisture();
-//    sendDataMsg("sm", soil_moisture);
+    sendDataMsg("sm", soil_moisture);
   }
 
   if (clk % READ_TDS == 0) {
     float tds = readTDS();
-//    sendDataMsg("td", tds);
+    sendDataMsg("td", tds);
   }
 
   if (clk % READ_WATER_LEVEL == 0) {
-    // TODO: Update this depending on how we decide to use liquid level info
-    float water_level = readLiquidLevel();
-    // TODO: Send water level on a consistent interval so user can see when resevoir is low
-
-    // Estimate water level
-    float perc_water_level;
-    
-    // sendMaintenanceMsg("wl", String(perc_water_level));
+    int liquid_level = readLiquidLevel();
+    sendMaintenanceMsg("wl", String(liquid_level));
   }
   // TODO: Check filter time
  /*

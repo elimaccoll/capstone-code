@@ -229,8 +229,8 @@ window.onload = async () => {
     setupChart("chart-internal-humidity", "ih", "Humidity", "% Humidity", '%', 0, 100, load_int_humidity.min, load_int_humidity.max, int_humidity_data, ext_humidity_data);
     setupChart("chart-water-temp", "wt", "Water Temperature", "Temperature (°C)", '°C', 0, 100, load_water_temp.min, load_water_temp.max, water_temp_data);
     setupChart("chart-soil-temp", "st", "Soil Temperature", "Temperature (°C)", '°C', 0, 100, load_soil_temp.min, load_soil_temp.max, soil_temp_data);
-    setupChart("chart-tds", "td", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, load_tds.min, load_tds.max, tds_data);
-    setupChart("chart-soil-moisture", "sm", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, load_soil_moisture.min, load_soil_moisture.max, soil_moisture_data);
+    setupChart("chart-tds", "td", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 1000, load_tds.min, load_tds.max, tds_data);
+    setupChart("chart-soil-moisture", "sm", "Soil Moisture", "Soil Moisture (%)", "%", 0, 100, load_soil_moisture.min, load_soil_moisture.max, soil_moisture_data);
 }
 
 function delay(time) {

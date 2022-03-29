@@ -29,8 +29,11 @@ String soil_moisture;
 String soil_temp;
 String tds;
 
-String maint_msg = "";
+String maint_msg;
 
+String getMaintenanceMsg() {
+  return maint_msg;
+}
 String getInternalAirTemp() {
   return internal_air_temp;
 }
@@ -156,8 +159,7 @@ void setup() {
 
   // Route to send maintenance notifications
   server.on("/maintenance", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain", maint_msg);
-    maint_msg = "";
+    request->send(200, "text/plain", getMaintenanceMsg().c_str());
   });
   
   // Route to get threshold values from web page
@@ -218,18 +220,15 @@ void parseData(String data_str) {
 void parseMaintenance(String maint_str) {
   String maint_type = maint_str.substring(0, maint_str.indexOf(':'));
   String maint = maint_str.substring(maint_str.indexOf(':') + 1, maint_str.length());
-  String maint_msg = "";
   if (maint_type == "wl") {
     // TODO: Inform user of water level
     // maint here is percentage of water level
     maint_msg = "wl:" + String(maint) + EOF;
-    return;
   }
   else if (maint_type == "ft") {
     // TODO: Inform time to change filter
     // maint here is time since last filter change?
     maint_msg = "ft:" + maint + EOF;
-    return;
   }
   else {
     Serial.println("Unrecognized Maint Type");

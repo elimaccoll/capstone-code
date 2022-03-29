@@ -53,14 +53,3 @@ export function setupChart(chart_id, msg_id, chart_title, y_axis_title, unit, mi
     // Write initial threshold values to their corresponding labels
     displayThresholds(chart_id);
 }
-
-// Not used anymore - data loaded from localstorage in datastore.js
-function setup() {
-    // The chart-id must match the DOM elements
-    setupChart("chart-internal-air-temp", "it", "Air Temperature", "Temperature (°C)", "°C", 0, 100, 20, 30); 
-    setupChart("chart-internal-humidity", "ih", "Humidity", "% Humidity", '%', 0, 100, 40, 50);
-    setupChart("chart-water-temp", "wt", "Water Temperature", "Temperature (°C)", '°C', 0, 100, 20, 30);
-    setupChart("chart-soil-temp", "st", "Soil Temperature", "Temperature (°C)", '°C', 0, 100, 20, 30);
-    setupChart("chart-tds", "td", "Total Dissolved Solids (TDS)", "TDS (ppm)", "ppm", 0, 500, 0, 100);
-    setupChart("chart-soil-moisture", "sm", "Soil Moisture", "Soil Moisture (unit)", "unit", 0, 100, 50, 60);
-}

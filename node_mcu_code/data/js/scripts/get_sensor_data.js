@@ -1,8 +1,5 @@
 import { addPlotPoint } from "./charts_util.js";
 
-// TODO: Line up request intervals with arduino read intervals
-var interval = 3000; // 3 seconds
-
 let active = true;
 let testing = !active;
 
@@ -12,8 +9,8 @@ let testing = !active;
 // TODO: Update route names too
 
 // Read intervals for different sensor values - Match the arduino timings
-const READ_INTERNAL_AIR_TEMP = 1
-const READ_INTERNAL_HUMIDITY = 1
+const READ_INTERNAL_AIR_TEMP = 1;
+const READ_INTERNAL_HUMIDITY = 1;
 const READ_EXTERNAL_AIR_TEMP = 3;
 const READ_EXTERNAL_HUMIDITY = 3;
 const READ_WATER_TEMP = 3;
@@ -29,9 +26,9 @@ function handleMaintenance(maint_msg) {
     switch(maint_type) {
         case "wl":
             let wl_element = document.getElementById("maintenance-wl");
-            let wl_content = maint_msg.substring(3); // Don't want to include the ':'
-            wl_element.textContent = `Water Level: ${wl_content}%`;
-            setWaterLevel(wl_content);
+            let wl_bool = maint_msg.substring(3); // Don't want to include the ':'
+            wl_element.textContent = `Water Level: ${(wl_bool == 1) ? "Good" : "Low"}`; // %`;
+            // setWaterLevel(wl_content);
             break;
         case "ft":
             let ft_element = document.getElementById("maintenance-ft");
@@ -53,6 +50,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let maint_msg = this.responseText;
+                console.log(maint_msg);
                 if (maint_msg) { handleMaintenance(maint_msg); }
             }
         };
@@ -95,7 +93,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let external_air_temp = parseFloat(this.responseText);
-                    addPlotPoint("chart-internal-air-temp", external_air_temp);
+                    addPlotPoint("chart-internal-air-temp", external_air_temp, 1);
                 }
             };
             xhttp.open("GET", "/external_air_temp", true);
@@ -108,7 +106,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let external_humidity = parseFloat(this.responseText);
-                    addPlotPoint("chart-internal-humidity", external_humidity);
+                    addPlotPoint("chart-internal-humidity", external_humidity, 1);
                 }
             };
             xhttp.open("GET", "/external_humidity", true);
