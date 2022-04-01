@@ -183,7 +183,7 @@ void setup() {
     request->send(200, "text/plain", getMaintenanceMsg().c_str());
   });
   
-  // Route to get threshold values from web page
+  // Route to get threshold values from UI
   server.on("/threshold_control", HTTP_GET, [](AsyncWebServerRequest * request) {
     String type, min_value, max_value, msg;
     // Can check for multiple specific parameters when dealing different controls on actuators being changed (min, max, etc.)
@@ -197,7 +197,22 @@ void setup() {
       nodeSerial.print(msg);
     }
     else {
-      Serial.println("Type value field was missing");
+      Serial.println("Missing parameter");
+    }
+  });
+
+  // Route to control LED from UI
+  server.on("/led_control", HTTP_GET, [](AsyncWebServerRequest * request) {
+    String brightness, msg;
+    if (request->hasParam("brightness")) {
+      // Parse Route URL for parameters
+      brightness = request->getParam("brightness")->value();
+      // Send to Arduino
+      msg = "l:" + brightness + EOF;
+      nodeSerial.print(msg);
+    }
+    else {
+      Serial.println("Missint parameter");
     }
   });
 

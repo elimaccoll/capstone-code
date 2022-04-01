@@ -26,7 +26,7 @@ const handleMaintenance = (maint_msg) => {
         case "wl":
             let wl_element = $("#maintenance-wl-indicator");
             let wl_bool = maint_msg.substring(3); // Don't want to include the ':'
-            wl_element.textContent = `Water Level: ${(wl_bool == 1) ? "Good" : "Low"}`; // %`;
+            wl_element.textContent = `${(wl_bool == 1) ? "Good" : "Low"}`; // %`;
             // setWaterLevel(wl_content);
             break;
         case "ft":

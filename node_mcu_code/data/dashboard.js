@@ -4,7 +4,7 @@ import Header from "./header_component.js";
 
 (function ($) {
     $("#root").append(`
-    <div class="container-fluid">
+    <div class="container-fluid bg-light">
         ${Header()}
         ${ChartList()}
         ${InfoPanel()}

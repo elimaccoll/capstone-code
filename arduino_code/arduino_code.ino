@@ -3,18 +3,19 @@
 #include <SoftwareSerial.h>
 #include <dht.h>
 
+// TODO: This code is kind of a mess
 // TODO: Do we want to use some sort of algorithm (median filtering algorithm - see TDS sensor code)
+// TODO: Clean up message parsing
 
 SoftwareSerial arduinoSerial(12, 13);
 
 #define EOF '\n'
 #define VREF 5.0 // analog reference voltage of the ADC
 
+// Control Pins
+const int DEMO_LED_PIN = 8;
 
-// TODO: Replace with actual sensor pin numbers when we pick them
 // Sensor Pins
-const int LED_CONTROL_PIN = 8;
-
 #define SOIL_MOISTURE_PIN A1
 
 #define TDS_PIN A2
@@ -66,9 +67,6 @@ void setup() {
   // Serial to print
   Serial.begin(115200);
 
-  // TODO: Replace with actual sensor and actuator setup when we connect them
-  pinMode(LED_CONTROL_PIN, OUTPUT);
-
   pinMode(TDS_PIN, INPUT);
   pinMode(SOIL_MOISTURE_PIN, INPUT);
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
@@ -78,7 +76,8 @@ void setup() {
 
 
   // TODO: Remove - used for demo
-  digitalWrite(LED_CONTROL_PIN, LOW);
+  pinMode(DEMO_LED_PIN, OUTPUT);
+  digitalWrite(DEMO_LED_PIN, LOW);
 
   filter_timer = 0;
 
@@ -152,7 +151,7 @@ float readOneWire() {
   return avg_tempC;
 }
 int readLiquidLevel() {
-  // Returns 0 when water is low, 1 else
+  // Returns 0 when water is low, 1 otherwise
   int liquid_level = digitalRead(LIQUID_LEVEL_PIN);
   return liquid_level;
 }
@@ -180,10 +179,8 @@ void sendDataMsg(String id, float data) {
  * wl - Water level (Water level is low)
  * ft - Filter time (Need to change filter)
  * 
- * E.g., msg = "m:wl:15\n"
+ * E.g., msg = "m:wl:0\n"
  */
-// TODO: Decide what to put as content of maintence message (do I even need content?)
-// Send maintenance message to NodeMCU (Node has full versions of the maintenance msgs)
 void sendMaintenanceMsg(String id, String maint_msg) {
   String msg = "";
   msg = "m:" + id + ":" + maint_msg + EOF;
@@ -193,6 +190,7 @@ void sendMaintenanceMsg(String id, String maint_msg) {
 
 
 void configThreshold(String config_str) {
+  // TODO: Clean this up
   String config_type = config_str.substring(0, config_str.indexOf(':'));
   String config_set = config_str.substring(config_str.indexOf(':') + 1, config_str.length());
 
@@ -235,11 +233,17 @@ void configThreshold(String config_str) {
 }
 
 
+void configLEDBrightness(String brightness_str) {
+  float brightness = brightness_str.toFloat();
+  // analogWrite(LED_PIN, brightness);
+}
+
 void processMessage(String msg) {
   /* Parse the message type received from NodeMCU
    *  t - Threshold change
-   *  f - Filter changed (?)
-   *  l - Lights (?)
+   *  f - Filter changed
+   *  l - Lights
+   *  E.g. msg = "l:64\n", msg = "t:sm:30,40\n"
    */ 
   char msg_type = msg.charAt(0);
   String config_str = msg.substring(2, msg.length());
@@ -249,11 +253,11 @@ void processMessage(String msg) {
       configThreshold(config_str);
       break;
     case 'f':
-      // Reset filter timer - the message being received indicates that user changed filter
+      // TODO: Reset filter timer - the message being received indicates that user changed filter
       filter_timer = 0;
       break;
     case 'l':
-      // TODO: Control lights
+      configLEDBrightness(config_str);
       break;
     default:
       Serial.println("Unrecognized Message type");
@@ -287,10 +291,10 @@ void loop() {
 
     // Control loop logic for internal humidity
     if (int_humidity > int_humidity_max || int_humidity < int_humidity_min) {
-      digitalWrite(LED_CONTROL_PIN, HIGH);
+      digitalWrite(DEMO_LED_PIN, HIGH);
     }
     else {
-      digitalWrite(LED_CONTROL_PIN, LOW);
+      digitalWrite(DEMO_LED_PIN, LOW);
     }
     
     sendDataMsg("ih", int_humidity);
