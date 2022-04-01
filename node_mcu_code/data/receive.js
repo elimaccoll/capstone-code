@@ -90,7 +90,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let external_air_temp = parseFloat(this.responseText);
-                    addPlotPoint("internal-air-temp", external_air_temp, 1);
+                    addPlotPoint("air-temp", external_air_temp, 1);
                 }
             };
             xhttp.open("GET", "/external_air_temp", true);
@@ -103,7 +103,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let external_humidity = parseFloat(this.responseText);
-                    addPlotPoint("internal-humidity", external_humidity, 1);
+                    addPlotPoint("humidity", external_humidity, 1);
                 }
             };
             xhttp.open("GET", "/external_humidity", true);
