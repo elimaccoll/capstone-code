@@ -235,6 +235,7 @@ void configThreshold(String config_str) {
 
 void configLEDBrightness(String brightness_str) {
   float brightness = brightness_str.toFloat();
+  Serial.println(brightness);
   // analogWrite(LED_PIN, brightness);
 }
 
