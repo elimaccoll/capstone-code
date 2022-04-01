@@ -1,5 +1,5 @@
 import { ChartListItem } from "./chart_list_item_component.js";
-import charts from "./js/scripts/charts_to_render.js";
+import charts from "./charts_to_render.js";
 
 export const ChartList = () => {
     return (`

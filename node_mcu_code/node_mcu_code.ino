@@ -104,8 +104,8 @@ void setup() {
 
 
   // Routes to load javascript scripts
-  server.on("/js/scripts/charts_to_render.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/js/scripts/charts_to_render.js", "text/javascript");
+  server.on("/charts_to_render.js", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/charts_to_render.js", "text/javascript");
   });
   server.on("/chart_list_item_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/chart_list_item_component.js", "text/javascript");
