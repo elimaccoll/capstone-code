@@ -1,4 +1,4 @@
-export const ChartListItem = (chart_name) => {
+const ChartListItem = (chart_name) => {
     return (`
         <li class="chart-list-item list-group-item col-12 col-md-6 col-xl-4">
             <div id="chart-${chart_name}"></div>
@@ -25,3 +25,4 @@ export const ChartListItem = (chart_name) => {
         </li>
     `);
 };
+export default ChartListItem;
