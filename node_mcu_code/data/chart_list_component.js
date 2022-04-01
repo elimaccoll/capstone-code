@@ -4,7 +4,7 @@ import charts from "./charts_to_render.js";
 export const ChartList = () => {
     return (`
         <ul class="row list-group list-group-horizontal d-flex flex-nowrap overflow-auto">
-            ${charts.map(chart_name => ChartListItem(chart_name)).join('')}
+            ${charts.map(chart => ChartListItem(chart["name"])).join('')}
         </ul>
     `);
 };

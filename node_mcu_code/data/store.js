@@ -12,116 +12,41 @@ clear_btn.addEventListener('click', () => {
     window.location.reload();
 });
 
-// Store current thresholds in local storage - Called whenever one is changed
-// TODO: Store chart_info instead?
-export function storeThreshold(chart_id, min, max) {
-    let obj;
-    if (chart_id == "chart-air-temp") {
-        obj = JSON.parse(localStorage.int_air_temp);
-        obj.min = min;
-        obj.max = max;
-        localStorage.int_air_temp = JSON.stringify(obj);
+const getIndexFromName = (chart_arr, chart_name) => {
+    for (let i = 0; i < chart_arr.length; i++) {
+        let curr_chart_name = chart_arr[i].name;
+        if (curr_chart_name === chart_name) {
+            return i;
+        };
     }
-    else if (chart_id == "chart-humidity") {
-        obj = JSON.parse(localStorage.int_humidity);
-        obj.min = min;
-        obj.max = max;
-        localStorage.int_humidity = JSON.stringify(obj);
-    }
-    else if (chart_id == "chart-water-temp") {
-        obj = JSON.parse(localStorage.water_temp);
-        obj.min = min;
-        obj.max = max;
-        localStorage.water_temp = JSON.stringify(obj);
-    }
-    else if (chart_id == "chart-soil-temp") {
-        obj = JSON.parse(localStorage.soil_temp);
-        obj.min = min;
-        obj.max = max;
-        localStorage.soil_temp = JSON.stringify(obj);
-    }
-    else if (chart_id == "chart-soil-moisture") {
-        obj = JSON.parse(localStorage.soil_moisture);
-        obj.min = min;
-        obj.max = max;
-        localStorage.soil_moisture = JSON.stringify(obj);
-    }
-    else if (chart_id == "chart-tds") {
-        obj = JSON.parse(localStorage.tds);
-        obj.min = min;
-        obj.max = max;
-        localStorage.tds = JSON.stringify(obj);
-    }
+    return -1;
 }
 
-// Add a data point to local storage for corresponding chart
-export function bufferData(chart_id, plot_point, series_ind) {
-    // Call inside of `AddPlotPoint`
-    // If length of chart.data > DATA_BUFFER then remove first element and add new data to end
-    let curr_buffer = [];
-    let obj;
-    if (chart_id == "chart-air-temp") {
-        if (series_ind == 0) {
-            obj = JSON.parse(localStorage.int_air_temp);
-            curr_buffer = obj.data;
-            if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-            curr_buffer.push(plot_point);
-            obj.data = curr_buffer;
-            localStorage.int_air_temp = JSON.stringify(obj);
-        }
-        else {
-            if (localStorage.ext_air_temp) { curr_buffer = JSON.parse(localStorage.ext_air_temp); }
-            if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-            curr_buffer.push(plot_point);
-            localStorage.ext_air_temp = JSON.stringify(curr_buffer);
-        }
-    }
-    else if (chart_id == "chart-humidity") {
-        if (series_ind == 0) {
-            obj = JSON.parse(localStorage.int_humidity);
-            curr_buffer = obj.data;
-            if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-            curr_buffer.push(plot_point);
-            obj.data = curr_buffer;
-            localStorage.int_humidity = JSON.stringify(obj);
-        }
-        else {
-            if (localStorage.ext_humidity) { curr_buffer = JSON.parse(localStorage.ext_humidity); }
-            if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-            curr_buffer.push(plot_point);
-            localStorage.ext_humidity = JSON.stringify(curr_buffer);
-        }
-    }
-    else if (chart_id == "chart-water-temp") {
-        obj = JSON.parse(localStorage.water_temp);
-        curr_buffer = obj.data;
+export const storeThresholds = (chart_name, minThreshold, maxThreshold) => {
+    let charts = JSON.parse(localStorage.charts);
+    const index = getIndexFromName(charts, chart_name);
+    if (index === -1) { return; }
+    charts[index].config.minThreshold = minThreshold;
+    charts[index].config.maxThreshold = maxThreshold;
+    localStorage.charts = JSON.stringify(charts);
+}
+
+export const storeDataBuffer = (chart_name, plot_point, series_ind) => {
+    let charts = JSON.parse(localStorage.charts);
+    const index = getIndexFromName(charts, chart_name);
+    if (index === -1) { return; }
+    let curr_buffer;
+    if (series_ind == 0) {
+        curr_buffer = charts[index].config.data1;
         if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
         curr_buffer.push(plot_point);
-        obj.data = curr_buffer;
-        localStorage.water_temp = JSON.stringify(obj);
+        charts[index].config.data1 = curr_buffer;
     }
-    else if (chart_id == "chart-soil-temp") {
-        obj = JSON.parse(localStorage.soil_temp);
-        curr_buffer = obj.data;
+    else if (series_ind == 1) {
+        curr_buffer = charts[index].config.data2;
         if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
         curr_buffer.push(plot_point);
-        obj.data = curr_buffer;
-        localStorage.soil_temp = JSON.stringify(obj);
+        charts[index].config.data2 = curr_buffer;
     }
-    else if (chart_id == "chart-soil-moisture") {
-        obj = JSON.parse(localStorage.soil_moisture);
-        curr_buffer = obj.data;
-        if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-        curr_buffer.push(plot_point);
-        obj.data = curr_buffer;
-        localStorage.soil_moisture = JSON.stringify(obj);
-    }
-    else if (chart_id == "chart-tds") {
-        obj = JSON.parse(localStorage.tds);
-        curr_buffer = obj.data;
-        if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-        curr_buffer.push(plot_point);
-        obj.data = curr_buffer;
-        localStorage.tds = JSON.stringify(obj);
-    }
+    localStorage.charts = JSON.stringify(charts);
 }

@@ -1,6 +1,6 @@
 import { addPlotPoint } from "./charts.js";
 
-let active = true;
+let active = false;
 
 $("#testing-btn").click(() => {
     generateTestData();
@@ -173,28 +173,28 @@ const generateTestData = () => {
     });
     // Temperature and Humidity
     setInterval(() => {
-        addPlotPoint("chart-humidity", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
-        addPlotPoint("chart-humidity", data + (Math.random() * 10 + 30));
-        addPlotPoint("chart-air-temp", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
-        addPlotPoint("chart-air-temp", data + (Math.random() * 10 + 30));
+        addPlotPoint("humidity", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
+        addPlotPoint("humidity", data + (Math.random() * 10 + 30));
+        addPlotPoint("air-temp", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
+        addPlotPoint("air-temp", data + (Math.random() * 10 + 30));
     }, 1000);
     // Soil Moisture
     setInterval(() => {
-        addPlotPoint("chart-soil-moisture", data + (Math.random() * 10 + 30));
+        addPlotPoint("soil-moisture", data + (Math.random() * 10 + 30));
     }, 3000);
     // TDS
     setInterval(() => {
-        addPlotPoint("chart-tds", data);
+        addPlotPoint("tds", data);
     }, 5000);
     // Water Temperature
     setInterval(() => {
         let wt_data = Math.random() * 30 + 10;
-        addPlotPoint("chart-water-temp", wt_data);
+        addPlotPoint("water-temp", wt_data);
     }, 3000);
     // Soil Temperature
     setInterval(() => {
         let st_data = Math.random() * 20 + 15;
-        addPlotPoint("chart-soil-temp", st_data);
+        addPlotPoint("soil-temp", st_data);
     }, 3000);
 
     // Testing Maintenance Messages

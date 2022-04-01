@@ -1,4 +1,16 @@
-export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, config, data_arr1, data_arr2 = []) => {
+const parseLoadedData = (data_arr) => {
+    let data_out = [];
+    for (let point of data_arr) {
+        const t = Date.parse(point.x);
+        const entry = [t, point.y];
+        data_out.push(entry);
+    }
+    return data_out;
+}
+
+export const createChart = (chart) => {
+    const chart_id = `chart-${chart.name}`;
+    const chart_config = chart.config;
     return Highcharts.chart(chart_id, {
         global: {
             UTC: false,
@@ -12,7 +24,7 @@ export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, con
             panKey: 'shift'
         },
         title: {
-            text: plot_title
+            text: chart_config.title
         },
         subtitle: {
             text: "Click and drag to zoom in. Hold down shift key to pan."
@@ -31,18 +43,18 @@ export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, con
         },
         yAxis: {
             title: {
-                text: y_axis_title
+                text: chart_config.yAxis
             },
-            min: config.min_bound,
-            max: config.max_bound,
+            min: chart_config.minBound,
+            max: chart_config.maxBound,
             tickInterval: 5,
             plotBands: [{
                 color: 'lightgreen',
-                from: config.min_threshold,
-                to: config.max_threshold
+                from: chart_config.minThreshold,
+                to: chart_config.maxThreshold
             }],
-            ceiling: config.max_bound,
-            floor: config.min_bound
+            ceiling: chart_config.maxBound,
+            floor: chart_config.minBound
         },
         plotOptions: {
             series: {
@@ -53,7 +65,7 @@ export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, con
         tooltip: {
             crosshairs: true,
             //snap: 5,
-            valueSuffix: y_axis_unit,
+            valueSuffix: chart_config.unit,
             valueDecimals: 2,
             formatter: function() {
                 const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -71,14 +83,14 @@ export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, con
                 const dt = new Date(Date.parse(x));
                 const dt_str = monthLabels[dt.getMonth()] + " " + dt.getDate() + 
                 " "+ (dt.getHours() + 4) + ":"+ dt.getMinutes()+ ":"+ dt.getSeconds();
-                return series_name + '<br>' + dt_str + '<br>' + this.y.toFixed(2) + y_axis_unit;
+                return series_name + '<br>' + dt_str + '<br>' + this.y.toFixed(2) + chart_config.unit;
             }
         },
         series: [
             {
                 name: 'Terrarium Sensor Data',
                 type: 'line',
-                data: data_arr1,
+                data: parseLoadedData(chart_config.data1),
                 marker: {
                     lineWidth: 1,
                     lineColor: 'black',
@@ -86,10 +98,10 @@ export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, con
                 lineWidth: 1.5,
                 // Threshold Zones only apply to this series
                 zones: [{
-                    value: config.min_threshold,
+                    value: chart_config.minThreshold,
                     color: 'red'
                 }, {
-                    value: config.max_threshold,
+                    value: chart_config.maxThreshold,
                     color: 'blue'
                 }, {
                     value: Number.MAX_SAFE_INTEGER,
@@ -99,7 +111,7 @@ export const createChart = (chart_id, plot_title, y_axis_title, y_axis_unit, con
             {
                 name: 'External Sensor Data',
                 type: 'line',
-                data: data_arr2,
+                data: parseLoadedData(chart_config.data2),
                 marker: {
                     fillColor: 'white', // Set marker fill color
                     lineWidth: 1,
