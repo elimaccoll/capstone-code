@@ -18,6 +18,7 @@ export const createChart = (chart) => {
             timezoneOffset: 180
         },
         chart: {
+            height: "75%",
             backgroundColor: 'azure', // Same as body background color
             zoomType: 'x',
             panning: true,
@@ -120,6 +121,6 @@ export const createChart = (chart) => {
                 lineWidth: 1.5,
                 color: 'black',
             }
-        ]
+        ],
     });
 };
