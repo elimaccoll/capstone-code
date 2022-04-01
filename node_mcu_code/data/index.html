@@ -1,197 +1,28 @@
 <html>
 <head>
-  <title>Capstone Sample</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="data:,">
-  <!-- CSS -->
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <!-- Libraries -->
-  <script src="js/libraries/highcharts.js"></script>
-  <script src="js/libraries/jquery.min.js"></script>
-  <!-- Scripts -->
-  <script type="module" src="js/scripts/get_sensor_data.js" defer></script>
-  <script type="module" src="js/scripts/send_config.js" defer></script>
-  <script type="module" src="js/scripts/charts_util.js" defer></script>
-  <script type="module" src="js/scripts/info_panel.js" defer></script>
-  <script type="module" src="js/scripts/layout.js" defer></script>
-  <script type="module" src="js/scripts/charts.js" defer></script>
-  <script type="module" src="js/scripts/datastore.js" defer></script>
+    <title>Terrarium Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+    <script src="js/vendors/highcharts.js"></script>
+    <script src="js/vendors/jquery.min.js"></script>
+
+    <script src="js/scripts/charts_to_render.js" type="module" defer></script>
+    <script src="chart_list_item_component.js" type="module" defer></script>
+    <script src="chart_list_component.js" type="module" defer></script>
+    <script src="header_component.js" type="module" defer></script>
+    <script src="info_panel_component.js" type="module" defer></script>
+    <script src="dashboard.js" type="module" defer></script>
+    <script src="info_panel.js" type="module" defer></script>
+    <script src="create_chart.js" type="module" defer></script>
+    <script src="store.js" type="module" defer></script>
+    <script src="send.js" type="module" defer></script>
+    <script src="charts.js" type="module" defer></script>
+    <script src="load.js" type="module" defer></script>
+    <script src="receive.js" type="module" defer></script>
 </head>
-<body class="body">
-
-  <nav class="navbar">
-    <div class="active-layout layout-btn" id="layout1">Layout 1</div>
-    <div>Terrarium Monitoring Dashboard</div>
-    <div class="layout-btn" id="layout2">Layout 2</div>
-  </nav>
-
-  <div class="chart-panel-hor" id="chart-panel">
-    <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
-      <!-- Actual Chart -->
-      <figure class="chart-figure">
-        <div id="chart-internal-air-temp"></div>
-      </figure>
-      <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="internal-air-temp-max-threshold-form" autocomplete="off">
-          <label for="internal-air-temp-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="internal-air-temp-max-threshold" id="internal-air-temp-max-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="internal-air-temp-min-threshold-form" autocomplete="off">
-          <label for="internal-air-temp-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="internal-air-temp-min-threshold" id="internal-air-temp-min-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-      </div>
+<body>
+    <div id="root">
     </div>
-
-    <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
-      <!-- Actual Chart -->
-      <figure class="chart-figure">
-        <div id="chart-internal-humidity"></div>
-      </figure>
-      <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="internal-humidity-max-threshold-form" autocomplete="off">
-          <label for="internal-humidity-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="internal-humidity-max-threshold" id="internal-humidity-max-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="internal-humidity-min-threshold-form" autocomplete="off">
-          <label for="internal-humidity-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="internal-humidity-min-threshold" id="internal-humidity-min-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-      </div>
-    </div>
-
-    <div class="chart-container chart-container-layout1">
-      <!-- Actual Chart -->
-      <figure class="chart-figure">
-        <div id="chart-water-temp"></div>
-      </figure>
-      <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="water-temp-max-threshold-form" autocomplete="off">
-          <label for="water-temp-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="water-temp-max-threshold" id="water-temp-max-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="water-temp-min-threshold-form" autocomplete="off">
-          <label for="water-temp-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="water-temp-min-threshold" id="water-temp-min-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-      </div>
-    </div>
-
-    <div class="chart-container chart-container-layout1">
-      <!-- Actual Chart -->
-      <figure class="chart-figure">
-        <div id="chart-soil-temp"></div>
-      </figure>
-      <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-temp-max-threshold-form" autocomplete="off">
-          <label for="soil-temp-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="soil-temp-max-threshold" id="soil-temp-max-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-temp-min-threshold-form" autocomplete="off">
-          <label for="soil-temp-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="soil-temp-min-threshold" id="soil-temp-min-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
-      <!-- Actual Chart -->
-      <figure class="chart-figure">
-        <div id="chart-tds"></div>
-      </figure>
-      <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="tds-max-threshold-form" autocomplete="off">
-          <label for="tds-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="tds-max-threshold" id="tds-max-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="tds-min-threshold-form" autocomplete="off">
-          <label for="tds-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="tds-min-threshold" id="tds-min-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Chart Container -->
-    <div class="chart-container chart-container-layout1">
-      <!-- Actual Chart -->
-      <figure class="chart-figure">
-        <div id="chart-soil-moisture"></div>
-      </figure>
-      <!-- Threshold Forms for Chart -->
-      <div class="chart-threshold-container chart-threshold-container-layout1">
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-moisture-max-threshold-form" autocomplete="off">
-          <label for="soil-moisture-max-threshold">Max Threshold: </label>
-          <input type="number" class="config-input" name="soil-moisture-max-threshold" id="soil-moisture-max-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-        <form class="chart-threshold-form chart-threshold-form-layout1" id="soil-moisture-min-threshold-form" autocomplete="off">
-          <label for="soil-moisture-min-threshold">Min Threshold: </label>
-          <input type="number" class="config-input" name="soil-moisture-min-threshold" id="soil-moisture-min-threshold">
-          <button type="submit" class="config-submit-btn">Submit</button>
-        </form>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="info-panel-layout1" id="info-panel">
-    <div class="info-panel-tab-container">
-      <div class="info-panel-tab-active info-panel-tab" id="help-tab">Help</div>
-      <div class="info-panel-tab" id="maintenance-tab">Maintenance</div>
-      <div class="info-panel-tab" id="plant-tab">Plant Info</div>
-      <div class="info-panel-tab" id="about-tab">About</div>
-    </div>
-    <div class="info-tab" id="help-info-tab">
-      Describe what each chart means and what actuators they correspond to when sensor values are outside the acceptable threshold.
-    </div>
-    <div class="hidden info-tab" id="maintenance-info-tab">
-      Have a section for each type of maintenance (water level, filters, etc.) to inform user about that
-      can be 'activated' in some way to indicate that maintenance is required.
-      <div id="maintenance-content-container">
-        <div class="maintenance-content-card">
-          <span id="maintenance-wl">Water Level: </span>
-          <div id="wl-resevoir">
-            <div id="wl-fill"></div>
-          </div>
-        </div>
-        <div class="maintenance-content-card">
-          Filters - Time since last change
-          <div id="maintenance-ft-container">
-            <div id="maintenance-ft"></div>
-          </div>
-        </div>
-        <div class="maintenance-content-card">
-          Clear Existing Plot Data
-          <button id="clear-data-btn">Clear Existing Data</button>
-        </div>
-      </div>
-    </div>
-    <div class="hidden info-tab" id="plant-info-tab">
-      Information about the plant that the greenhouse is currently being used to grow (entered by user).  For this project, I will
-      just hard code this section with Cobra Lily info (ideal environment, thresholds, etc.)
-    </div>
-    <div class="hidden info-tab" id="about-info-tab">
-      About us/the project - don't know if we need this
-    </div>
-  </div>
-
 </body>
 </html>

@@ -1,12 +1,11 @@
-import { addPlotPoint } from "./charts_util.js";
+import { addPlotPoint } from "./charts.js";
 
 let active = true;
-let testing = !active;
 
-// TODO: Change chart-internal-air-temp to just air temp and simply determine which series to add the point to based on
-//       the received data type (it for internal temperature (Series 0), et for external temperature (Series 1))
-// TODO: Do the same thing for humidity (And any other sensor with internal and external values)
-// TODO: Update route names too
+$("#testing-btn").click(() => {
+    generateTestData();
+});
+
 
 // Read intervals for different sensor values - Match the arduino timings
 const READ_INTERNAL_AIR_TEMP = 1;
@@ -20,21 +19,21 @@ const READ_TDS = 5;
 const READ_MAINTENANCE = 10;
 
 
-function handleMaintenance(maint_msg) {
+const handleMaintenance = (maint_msg) => {
     // 1. Parse maint msg for type (first 2 chars)
     let maint_type = maint_msg.substring(0, 2);
-    switch(maint_type) {
+    switch (maint_type) {
         case "wl":
-            let wl_element = document.getElementById("maintenance-wl");
+            let wl_element = $("#maintenance-wl-indicator");
             let wl_bool = maint_msg.substring(3); // Don't want to include the ':'
             wl_element.textContent = `Water Level: ${(wl_bool == 1) ? "Good" : "Low"}`; // %`;
             // setWaterLevel(wl_content);
             break;
         case "ft":
-            let ft_element = document.getElementById("maintenance-ft");
-            let ft_content = maint_msg.substring(3); // Don't want to include the ':'
-            ft_element.textContent = ft_content;
-            setFilterTime(ft_content);
+            // let ft_element = $("#maintenance-ft");
+            // let ft_content = maint_msg.substring(3); // Don't want to include the ':'
+            // ft_element.textContent = ft_content;
+            // setFilterTime(ft_content);
             break;
         default:
             console.log("Unrecognized maintenance type.");
@@ -67,7 +66,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let internal_air_temp = parseFloat(this.responseText);
-                addPlotPoint("chart-internal-air-temp", internal_air_temp);
+                addPlotPoint("chart-air-temp", internal_air_temp);
             }
         };
         xhttp.open("GET", "/internal_air_temp", true);
@@ -80,7 +79,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let internal_humidity = parseFloat(this.responseText);
-                addPlotPoint("chart-internal-humidity", internal_humidity);
+                addPlotPoint("chart-humidity", internal_humidity);
             }
         };
         xhttp.open("GET", "/internal_humidity", true);
@@ -166,7 +165,7 @@ if (active) {
         }, READ_TDS * 1000 ) ;
 }
 
-if (testing) {
+const generateTestData = () => {
     // Add fake data points to plot - Used for testing
     let data;
     setInterval(() => {
@@ -174,10 +173,10 @@ if (testing) {
     });
     // Temperature and Humidity
     setInterval(() => {
-        addPlotPoint("chart-internal-humidity", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
-        addPlotPoint("chart-internal-humidity", data + (Math.random() * 10 + 30));
-        addPlotPoint("chart-internal-air-temp", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
-        addPlotPoint("chart-internal-air-temp", data + (Math.random() * 10 + 30));
+        addPlotPoint("chart-humidity", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
+        addPlotPoint("chart-humidity", data + (Math.random() * 10 + 30));
+        addPlotPoint("chart-air-temp", data + (Math.random() * 10 + 50), 1); // Plotting points on multiple series on same graph
+        addPlotPoint("chart-air-temp", data + (Math.random() * 10 + 30));
     }, 1000);
     // Soil Moisture
     setInterval(() => {
@@ -215,7 +214,7 @@ if (testing) {
 
 // Trigger different maintenenace notifications for testing
 // Maintenance Display - Control
-function setFilterTime(filter_time) {
+const setFilterTime = (filter_time) => {
     var elem = document.getElementById("maintenance-ft-container");
     let filter_time_val = parseInt(filter_time);
     let color;
@@ -233,7 +232,7 @@ function setFilterTime(filter_time) {
     return;
 }
 
-function setWaterLevel(water_level) {
+const setWaterLevel = (water_level) => {
     let time_to_fill = 10;
     var elem = document.getElementById("wl-fill");
     let curr_height = elem.style.height;

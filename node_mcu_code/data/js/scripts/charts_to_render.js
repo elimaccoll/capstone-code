@@ -1,0 +1,1 @@
+export default ["air-temp", "humidity", "water-temp", "soil-temp", "tds", "soil-moisture"];
