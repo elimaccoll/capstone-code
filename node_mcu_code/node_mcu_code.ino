@@ -86,7 +86,7 @@ void setup() {
     request->send(SPIFFS, "/index.html", String(), false);
   });
 
-  // Route to load style.css file
+  // Route to load styling
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/style.css", "text/css");
   });
@@ -94,7 +94,7 @@ void setup() {
     request->send(SPIFFS, "/bootstrap.min.css", "text/css");
   });
 
-  // Routes to load javascript libraries
+  // Routes to load libraries
   server.on("/js/vendors/highcharts.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/js/vendors/highcharts.js", "text/javascript");
   });
@@ -103,7 +103,7 @@ void setup() {
   });
 
 
-  // Routes to load javascript scripts
+  // Routes to load scripts
   server.on("/charts_to_render.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/charts_to_render.js", "text/javascript");
   });
@@ -143,43 +143,6 @@ void setup() {
   server.on("/receive.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/receive.js", "text/javascript");
   });
-//  server.on("/js/scripts/components/chart_list_item_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/chart_list_item_component.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/chart_list_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/chart_list_component.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/header_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/header_component.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/info_panel_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/info_panel_component.js", "text/javascript");
-//  });
-//  delay(1000);
-//  server.on("/js/scripts/dashboard.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/dashboard.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/create_chart.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/create_chart.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/charts.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/charts.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/load.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/load.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/store.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/store.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/send.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/send.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/receive.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/receive.js", "text/javascript");
-//  });
-//  server.on("/js/scripts/info_panel.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    request->send(SPIFFS, "/js/scripts/info_panel.js", "text/javascript");
-//  });
   
   // Routes to send data to web page
   // Route to send internal air temperature reading
