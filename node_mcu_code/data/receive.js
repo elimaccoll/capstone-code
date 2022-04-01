@@ -1,6 +1,6 @@
 import { addPlotPoint } from "./charts.js";
 
-let active = false;
+let active = true;
 
 $("#testing-btn").click(() => {
     generateTestData();
@@ -24,9 +24,8 @@ const handleMaintenance = (maint_msg) => {
     let maint_type = maint_msg.substring(0, 2);
     switch (maint_type) {
         case "wl":
-            let wl_element = $("#maintenance-wl-indicator");
             let wl_bool = maint_msg.substring(3); // Don't want to include the ':'
-            wl_element.textContent = `${(wl_bool == 1) ? "Good" : "Low"}`; // %`;
+            $("#maintenance-wl-indicator").text(`${(wl_bool == 1) ? "Good" : "Low"}`); // %`;
             // setWaterLevel(wl_content);
             break;
         case "ft":
@@ -49,7 +48,6 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let maint_msg = this.responseText;
-                console.log(maint_msg);
                 if (maint_msg) { handleMaintenance(maint_msg); }
             }
         };
@@ -66,7 +64,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let internal_air_temp = parseFloat(this.responseText);
-                addPlotPoint("chart-air-temp", internal_air_temp);
+                addPlotPoint("air-temp", internal_air_temp);
             }
         };
         xhttp.open("GET", "/internal_air_temp", true);
@@ -79,7 +77,7 @@ if (active) {
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 let internal_humidity = parseFloat(this.responseText);
-                addPlotPoint("chart-humidity", internal_humidity);
+                addPlotPoint("humidity", internal_humidity);
             }
         };
         xhttp.open("GET", "/internal_humidity", true);
@@ -92,7 +90,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let external_air_temp = parseFloat(this.responseText);
-                    addPlotPoint("chart-internal-air-temp", external_air_temp, 1);
+                    addPlotPoint("internal-air-temp", external_air_temp, 1);
                 }
             };
             xhttp.open("GET", "/external_air_temp", true);
@@ -105,38 +103,39 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let external_humidity = parseFloat(this.responseText);
-                    addPlotPoint("chart-internal-humidity", external_humidity, 1);
+                    addPlotPoint("internal-humidity", external_humidity, 1);
                 }
             };
             xhttp.open("GET", "/external_humidity", true);
             xhttp.send();
         }, READ_EXTERNAL_HUMIDITY * 1000 ) ;
     
+    // TODO: Uncomment these when they're hooked up
     // Water Temperature
-    setInterval(function ( ) {
-        var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    let water_temp = parseFloat(this.responseText);
-                    addPlotPoint("chart-water-temp", water_temp);
-                }
-            };
-            xhttp.open("GET", "/water_temp", true);
-            xhttp.send();
-        }, READ_WATER_TEMP * 1000 ) ;
+    // setInterval(function ( ) {
+    //     var xhttp = new XMLHttpRequest();
+    //         xhttp.onreadystatechange = function() {
+    //             if (this.readyState == 4 && this.status == 200) {
+    //                 let water_temp = parseFloat(this.responseText);
+    //                 addPlotPoint("water-temp", water_temp);
+    //             }
+    //         };
+    //         xhttp.open("GET", "/water_temp", true);
+    //         xhttp.send();
+    //     }, READ_WATER_TEMP * 1000 ) ;
 
     // Soil Temperature
-    setInterval(function ( ) {
-        var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    let soil_temp = parseFloat(this.responseText);
-                    addPlotPoint("chart-soil-temp", soil_temp);
-                }
-            };
-            xhttp.open("GET", "/soil_temp", true);
-            xhttp.send();
-        }, READ_SOIL_TEMP * 1000 ) ;
+    // setInterval(function ( ) {
+    //     var xhttp = new XMLHttpRequest();
+    //         xhttp.onreadystatechange = function() {
+    //             if (this.readyState == 4 && this.status == 200) {
+    //                 let soil_temp = parseFloat(this.responseText);
+    //                 addPlotPoint("soil-temp", soil_temp);
+    //             }
+    //         };
+    //         xhttp.open("GET", "/soil_temp", true);
+    //         xhttp.send();
+    //     }, READ_SOIL_TEMP * 1000 ) ;
 
     // Soil Moisture
     setInterval(function ( ) {
@@ -144,7 +143,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let soil_moisture = parseFloat(this.responseText);
-                    addPlotPoint("chart-soil-moisture", soil_moisture);
+                    addPlotPoint("soil-moisture", soil_moisture);
                 }
             };
             xhttp.open("GET", "/soil_moisture", true);
@@ -157,7 +156,7 @@ if (active) {
             xhttp.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let tds = parseFloat(this.responseText);
-                    addPlotPoint("chart-tds", tds);
+                    addPlotPoint("tds", tds);
                 }
             };
             xhttp.open("GET", "/tds", true);
