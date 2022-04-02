@@ -13,6 +13,10 @@ export default [
             data1: [],
             data2: [],
         },
+        read: {
+            intervals: [1, 3],
+            routes: ["internal_air_temp", "external_air_temp"]
+        }
     },
     {
         name: "humidity",
@@ -28,6 +32,10 @@ export default [
             data1: [],
             data2: [],
         },
+        read: {
+            intervals: [1, 3],
+            routes: ["internal_humidity", "external_humidity"]
+        }
     },
     {
         name: "water-temp",
@@ -43,6 +51,10 @@ export default [
             data1: [],
             data2: [],
         },
+        read: {
+            intervals: [3],
+            routes: ["water_temp"]
+        }
     },
     {
         name: "soil-temp",
@@ -58,6 +70,10 @@ export default [
             data1: [],
             data2: [],
         },
+        read: {
+            intervals: [3],
+            routes: ["soil_temp"]
+        }
     },
     {
         name: "tds",
@@ -73,6 +89,10 @@ export default [
             data1: [],
             data2: [],
         },
+        read: {
+            intervals: [5],
+            routes: ["tds"]
+        }
     },
     {
         name: "soil-moisture",
@@ -88,5 +108,9 @@ export default [
             data1: [],
             data2: [],
         },
+        read: {
+            intervals: [5],
+            routes: ["soil_moisture"]
+        }
     },
 ]

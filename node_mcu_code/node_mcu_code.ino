@@ -102,7 +102,6 @@ void setup() {
     request->send(SPIFFS, "/js/vendors/jquery.min.js", "text/javascript");
   });
 
-
   // Routes to load scripts
   server.on("/charts_to_render.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/charts_to_render.js", "text/javascript");
@@ -139,6 +138,9 @@ void setup() {
   });
   server.on("/load.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/load.js", "text/javascript");
+  });
+  server.on("/maintenance.js", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/maintenance.js", "text/javascript");
   });
   server.on("/receive.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/receive.js", "text/javascript");
@@ -212,7 +214,7 @@ void setup() {
       nodeSerial.print(msg);
     }
     else {
-      Serial.println("Missint parameter");
+      Serial.println("Missing parameter");
     }
   });
 
@@ -257,13 +259,9 @@ void parseMaintenance(String maint_str) {
   String maint_type = maint_str.substring(0, maint_str.indexOf(':'));
   String maint = maint_str.substring(maint_str.indexOf(':') + 1, maint_str.length());
   if (maint_type == "wl") {
-    // TODO: Inform user of water level
-    // maint here is percentage of water level
     maint_msg = "wl:" + String(maint) + EOF;
   }
   else if (maint_type == "ft") {
-    // TODO: Inform time to change filter
-    // maint here is time since last filter change?
     maint_msg = "ft:" + maint + EOF;
   }
   else {

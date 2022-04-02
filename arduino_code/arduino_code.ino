@@ -3,8 +3,14 @@
 #include <SoftwareSerial.h>
 #include <dht.h>
 
-// TODO: This code is kind of a mess
-// TODO: Do we want to use some sort of algorithm (median filtering algorithm - see TDS sensor code)
+// TODO: This code is a mess - Visitor pattern
+// - Base class 'Sensor' w/ pin, read interval, last read, min thresh, max thresh
+// - Subclass for each sensor (use base class constructor)
+// - Visitor for setup (pinMode, etc.)
+// - Visitor for reading data
+// - Visitor for sending data
+// - Visitor for setting new thresholds??
+
 // TODO: Clean up message parsing
 
 SoftwareSerial arduinoSerial(12, 13);
@@ -133,7 +139,7 @@ float readSoilTemp() {
 }
 
 float readSoilMoisture() {
-  // TODO: Not sure if this convertion is right/how we want to display soil moisture
+  // TODO: Fix conversion / decide how to represent
   float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
   float soil_moisture_percent = (float) map(soil_moisture, 0, 1023, 0, 100);
   return soil_moisture_percent;

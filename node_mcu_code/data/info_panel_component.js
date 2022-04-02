@@ -17,9 +17,17 @@ const InfoPanel = () => {
             </ul>
             <div class="info-panel-content mt-2">
                 <div class="row text-center info-content" id="maintenance-content">
-                    <div class="col-4" id="maintenance-wl">
-                        Water Level:
-                        <span id="maintenance-wl-indicator"></span>
+                    <div class="col-4">
+                        <div>
+                            Water Level:
+                            <span id="maintenance-wl-indicator"></span>
+                        </div>
+                        <div class="mt-2 d-flex justify-content-center">
+                            <div class="w-50 py-2 rounded-pill" id="maintenance-filter">
+                                Filter Quality:
+                                <span id="maintenance-filter-quality"></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-4">
                         <label class="form-label" for="led-control">
