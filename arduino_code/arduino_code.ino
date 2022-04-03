@@ -3,16 +3,110 @@
 #include <SoftwareSerial.h>
 #include <dht.h>
 
-// TODO: This code is a mess - Visitor pattern
-// - Base class 'Sensor' w/ pin, read interval, last read, min thresh, max thresh
-// - Subclass for each sensor (use base class constructor)
-// - Visitor for setup (pinMode, etc.)
-// - Visitor for reading data
-// - Visitor for sending data
-// - Visitor for setting new thresholds??
-
 // TODO: Clean up message parsing
 
+class Sensor {
+    private:
+        String id;
+        int pin;
+        int readInterval;
+        int lastRead;
+        float minThresh;
+        float maxThresh;
+    public:
+        Sensor(String _id, int _pin, int _readInterval, float _minThresh, float _maxThresh) {
+            id = _id;
+            pin = _pin;
+            readInterval = _readInterval;
+            minThresh = _minThresh;
+            maxThresh = _maxThresh;
+        }
+        void setMinThresh(float _minThresh) { minThresh = _minThresh; }
+        void setMaxThresh(float _maxThresh) { maxThresh = _maxThresh; }
+        String getId() { return id; }
+        // Override this function if setup is different than just setting pinMode - OneWires
+        virtual void setup() {
+            pinMode(pin, INPUT);
+        }
+        void updateLastRead() { /* TODO: set lastRead to current time - call in read() */ return; }
+        bool readyToRead(); // TODO: return ((current_time - lastRead) >= readInterval)
+        void print() {
+            Serial.println("Min thresh: " + String(minThresh) + " | Max thresh: " + String(maxThresh));
+        };
+        virtual float read() { return (float) 0; };
+};
+
+class Temperature : public Sensor {
+    public:
+        Temperature(String id, int pin, int readInterval, float minThresh, float maxThresh) 
+            : Sensor(id, pin, readInterval, minThresh, maxThresh) {}
+        float read() override {
+            Serial.println("Read temperature");
+            updateLastRead();
+            return (float) 1.1;
+        }
+};
+
+class Humidity : public Sensor {
+    public:
+        Humidity(String id, int pin, int readInterval, float minThresh, float maxThresh) 
+            : Sensor(id, pin, readInterval, minThresh, maxThresh) {}
+        float read() override {
+            Serial.println("Read humidity");
+            updateLastRead();
+            return (float) 2.2;
+        }
+};
+
+/* ih - Internal humidity (inside enclosure)
+ * eh - External humidity (outside enclosure)
+ * it - Internal air temp. (inside enclosure)
+ * et - External air temp. (outside enclosure)
+ * wt - Water temp.
+ * st - Soil temp.
+ * sm - Soil moisture
+ * td - TDS ppm
+ * 
+ * E.g., "d:ih:45\n"
+ */
+// Send sensor data to NodeMCU to be displayed
+void sendDataMsg(String id, float data) {
+  String msg = "";
+  msg = "d:" + id + ":" + String(data) + EOF;
+  Serial.println("Sending data: " + msg);
+  arduinoSerial.print(msg);
+}
+
+/*
+ * wl - Water level (Water level is low)
+ * ft - Filter time (Need to change filter)
+ * 
+ * E.g., msg = "m:wl:0\n"
+ */
+void sendMaintenanceMsg(String id, String maint_msg) {
+  String msg = "";
+  msg = "m:" + id + ":" + maint_msg + EOF;
+  Serial.println("Sending maintenance: " + msg);
+  arduinoSerial.print(msg);
+}
+
+// Sensor Suite Operations
+void print(Sensor* sensors[], int size) {
+    for (int i = 0; i < size; i++) {
+        sensors[i]->print();
+    }
+}
+
+void read(Sensor* sensors[], int size) {
+    for (int i = 0; i < size; i++) {
+        // if (sensors[i].readyToRead()) {
+        //   sendDataMsg(sensors[i]->getId(), sensors[i]->read());
+        //}
+        sendDataMsg(sensors[i]->getId(), sensors[i]->read());
+    }
+}
+
+// TODO: Abstract these pin numbers
 SoftwareSerial arduinoSerial(12, 13);
 
 #define EOF '\n'
@@ -49,7 +143,7 @@ const int READ_WATER_LEVEL = 10;
 
 float filter_timer;
 
-// Initial control loop values - make these match the default javascript thresholds
+// Default control loop values - make these match the default javascript thresholds
 float int_humidity_max = 50;
 float int_humidity_min = 40;
 
@@ -73,6 +167,9 @@ void setup() {
   // Serial to print
   Serial.begin(115200);
 
+  // TODO: replace current setup with this for each sensor
+  // Temperature *it1 = new Temperature("it", pin, READ_INTERNAL_AIR_TEMP, int_air_temp_min, int_air_temp_max)
+
   pinMode(TDS_PIN, INPUT);
   pinMode(SOIL_MOISTURE_PIN, INPUT);
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
@@ -93,6 +190,7 @@ void setup() {
   delay(1000);
 }
 
+// TODO: Move read logic into respective classes
 // Read sensor data
 void readDHT() {
   // TODO: Read all DHTs
@@ -162,39 +260,7 @@ int readLiquidLevel() {
   return liquid_level;
 }
 
-/* ih - Internal humidity (inside enclosure)
- * eh - External humidity (outside enclosure)
- * it - Internal air temp. (inside enclosure)
- * et - External air temp. (outside enclosure)
- * wt - Water temp.
- * st - Soil temp.
- * sm - Soil moisture
- * td - TDS ppm
- * 
- * E.g., "d:ih:45\n"
- */
-// Send sensor data to NodeMCU to be displayed
-void sendDataMsg(String id, float data) {
-  String msg = "";
-  msg = "d:" + id + ":" + String(data) + EOF;
-  Serial.println("Sending data: " + msg);
-  arduinoSerial.print(msg);
-}
-
-/*
- * wl - Water level (Water level is low)
- * ft - Filter time (Need to change filter)
- * 
- * E.g., msg = "m:wl:0\n"
- */
-void sendMaintenanceMsg(String id, String maint_msg) {
-  String msg = "";
-  msg = "m:" + id + ":" + maint_msg + EOF;
-  Serial.println("Sending maintenance: " + msg);
-  arduinoSerial.print(msg);
-}
-
-
+// TODO: Set thresholds with classes instead of the default variables
 void configThreshold(String config_str) {
   // TODO: Clean this up
   String config_type = config_str.substring(0, config_str.indexOf(':'));
@@ -286,6 +352,8 @@ unsigned long current_time;
 // Main loop
 void loop() {
   current_time = millis();
+  
+  // TODO: Update reading sensors to use classes instead
   
   // Read sensor data on different intervals
   if (clk % READ_INTERNAL_AIR_TEMP == 0) {
