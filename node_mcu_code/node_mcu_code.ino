@@ -8,6 +8,8 @@
 // Library for File system (use HTML and CSS files)
 #include <FS.h>
 
+//TODO: Work on timings to minimize corrupted messages
+
 SoftwareSerial nodeSerial(D1, D2);
 
 #define EOF '\n'
@@ -29,11 +31,16 @@ String soil_moisture;
 String soil_temp;
 String tds;
 
-String maint_msg;
+String water_level;
+String filter_age;
 
-String getMaintenanceMsg() {
-  return maint_msg;
+String getWaterLevel() {
+  return water_level;
 }
+String getFilterAge() {
+  return filter_age;
+}
+
 String getInternalAirTemp() {
   return internal_air_temp;
 }
@@ -181,8 +188,11 @@ void setup() {
   });
 
   // Route to send maintenance notifications
-  server.on("/maintenance", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain", getMaintenanceMsg().c_str());
+  server.on("/water_level", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getWaterLevel().c_str());
+  });
+  server.on("/filter_age", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", getFilterAge().c_str());
   });
   
   // Route to get threshold values from UI
@@ -257,12 +267,12 @@ void parseData(String data_str) {
 
 void parseMaintenance(String maint_str) {
   String maint_type = maint_str.substring(0, maint_str.indexOf(':'));
-  String maint = maint_str.substring(maint_str.indexOf(':') + 1, maint_str.length());
+  String value = maint_str.substring(maint_str.indexOf(':') + 1, maint_str.length());
   if (maint_type == "wl") {
-    maint_msg = "wl:" + String(maint) + EOF;
+    water_level = value;
   }
   else if (maint_type == "ft") {
-    maint_msg = "ft:" + maint + EOF;
+    filter_age = value;
   }
   else {
     Serial.println("Unrecognized Maint Type");

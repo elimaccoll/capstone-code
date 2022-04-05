@@ -1,8 +1,8 @@
 import { addPlotPoint } from "./charts.js";
-import { handleMaintenance } from "./maintenance.js";
+import { displayFilterQuality, displayWaterLevelStatus } from "./maintenance.js";
 import charts from "./charts_to_render.js";
 
-let active = false;
+let active = true;
 
 const MAINTENANCE_INTERVAL = 10;
 if (active) {
@@ -11,11 +11,23 @@ if (active) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                let maint_msg = this.responseText;
-                if (maint_msg) { handleMaintenance(maint_msg); }
+                const value = this.responseText;
+                displayWaterLevelStatus(value);
             }
         };
-        xhttp.open("GET", "/maintenance", true);
+        xhttp.open("GET", "/water_level", true);
+        xhttp.send();
+    }, MAINTENANCE_INTERVAL * 1000 ) ;
+
+    setInterval(function ( ) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                const value = this.responseText;
+                displayFilterQuality(value);
+            }
+        };
+        xhttp.open("GET", "/filter_age", true);
         xhttp.send();
     }, MAINTENANCE_INTERVAL * 1000 ) ;
 

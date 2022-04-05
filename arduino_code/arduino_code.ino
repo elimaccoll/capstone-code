@@ -3,60 +3,248 @@
 #include <SoftwareSerial.h>
 #include <dht.h>
 
+// TODO: Figure out delay timing on setup
 // TODO: Clean up message parsing
+// TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
+// TODO: Need to sent thresholds cleaner - get corrupted and misinterpretted a lot (add delay after send)
+// TODO: Make a generic Temperature class to subclass Water, soil and air
+// TODO: Implement filter age
+
+float recentAirTemp;
+
+#define RX_PIN 12
+#define TX_PIN 13
+SoftwareSerial arduinoSerial(RX_PIN, TX_PIN);
+
+#define EOF '\n'
+#define VREF 5.0 // analog reference voltage of the ADC
+
+// Control Pins
+//TODO: Remove - used for demo
+const int DEMO_LED_PIN = 8;
+
+#define MISTER_PIN 4
+
+// Sensor Pins
+#define TDS_PIN A0
+#define SOIL_MOISTURE_PIN A1
+#define LIQUID_LEVEL_PIN 52
+#define ONE_WIRE_BUS_PIN 3
+#define DHT_PIN1 9
+#define DHT_PIN2 10
+
+const unsigned int DHT_PINS[2] = {DHT_PIN1, DHT_PIN2};
+const int NUM_DHT = 2;
+
 
 class Sensor {
     private:
-        String id;
-        int pin;
-        int readInterval;
-        int lastRead;
-        float minThresh;
-        float maxThresh;
+      String id;
+      unsigned int readInterval;
+      unsigned long lastRead = 0;
+      float recentValue;
+      float minThresh;
+      float maxThresh;
     public:
-        Sensor(String _id, int _pin, int _readInterval, float _minThresh, float _maxThresh) {
-            id = _id;
-            pin = _pin;
-            readInterval = _readInterval;
-            minThresh = _minThresh;
-            maxThresh = _maxThresh;
-        }
-        void setMinThresh(float _minThresh) { minThresh = _minThresh; }
-        void setMaxThresh(float _maxThresh) { maxThresh = _maxThresh; }
-        String getId() { return id; }
-        // Override this function if setup is different than just setting pinMode - OneWires
-        virtual void setup() {
-            pinMode(pin, INPUT);
-        }
-        void updateLastRead() { /* TODO: set lastRead to current time - call in read() */ return; }
-        bool readyToRead(); // TODO: return ((current_time - lastRead) >= readInterval)
-        void print() {
-            Serial.println("Min thresh: " + String(minThresh) + " | Max thresh: " + String(maxThresh));
-        };
-        virtual float read() { return (float) 0; };
+      Sensor(String _id, unsigned int _readInterval, float _minThresh, float _maxThresh) {
+        id = _id;
+        readInterval = _readInterval;
+        minThresh = _minThresh;
+        maxThresh = _maxThresh;
+      }
+      void setThresholds(float _minThresh, float _maxThresh) { 
+        minThresh = _minThresh;
+        maxThresh = _maxThresh;
+      }
+      void updateLastRead() { lastRead = millis(); }
+      void setRecentValue(float _recentValue) {
+        recentValue = _recentValue;
+        updateLastRead();
+      }
+      String getId() { return id; }
+      virtual void setupSensor() { return; }
+      bool readyToRead() { return ((millis() - lastRead) >= ((long) readInterval)); }
+      void printSensor() { Serial.println("Min thresh: " + String(minThresh) + " | Max thresh: " + String(maxThresh)); }
+      int checkControl() {
+        if (recentValue < minThresh) return -1;
+        else if (recentValue > maxThresh) return 1;
+        else return 0;
+      }
+      virtual float readSensor() { return (float) 0; } // Override to read sensor
+      virtual void control() { return; } // Override to control actuaors
 };
 
-class Temperature : public Sensor {
+class AirTemperatureOW : public Sensor {
+    private:
+      OneWire oneWire;
+      DallasTemperature oneWireSensors;
+      unsigned int oneWireCount = 0;
+      unsigned int PIN = ONE_WIRE_BUS_PIN;
     public:
-        Temperature(String id, int pin, int readInterval, float minThresh, float maxThresh) 
-            : Sensor(id, pin, readInterval, minThresh, maxThresh) {}
-        float read() override {
-            Serial.println("Read temperature");
-            updateLastRead();
-            return (float) 1.1;
+      AirTemperatureOW(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+          : Sensor(id, readInterval, minThresh, maxThresh) {}
+      void setupSensor() override {
+        oneWire = OneWire(PIN);
+        oneWireSensors.setOneWire(&oneWire);
+        oneWireSensors.begin();
+        oneWireCount = oneWireSensors.getDeviceCount();
+      }
+      float readSensor() override {
+        oneWireSensors.requestTemperatures();
+        float avgTempC = 0;
+        for (int i = 0; i < oneWireCount; i++) {
+            float tempC = oneWireSensors.getTempCByIndex(i);
+            avgTempC += tempC;
+            // Serial.println(DallasTemperature::toFahrenheit(tempC));
         }
+        avgTempC /= oneWireCount;
+        setRecentValue(avgTempC);
+        recentAirTemp = avgTempC;
+        control();
+        return avgTempC;
+      }
+      void control() override {
+        if (checkControl() == 0) return;
+        else if (checkControl() == -1) {
+//          Serial.println("Air temperature below minThresh");
+        }
+        else {
+//          Serial.println("Air temperature above maxThresh");
+        }
+      }
+};
+
+class AirTemperatureDHT : public Sensor {
+    private:
+      dht DHT;
+    public:
+      AirTemperatureDHT(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+          : Sensor(id, readInterval, minThresh, maxThresh) {}
+      void setupSensor() override {
+        for (int i = 0; i < NUM_DHT; i++) {
+          pinMode(DHT_PINS[i], OUTPUT);
+        }
+      }
+      float readSensor() override {
+          float avgTemp = 0;
+          for (int i = 0; i < NUM_DHT; i++) {
+            DHT.read11(DHT_PINS[i]);
+            float temp = DHT.temperature;
+            avgTemp += temp;
+          }
+          avgTemp /= NUM_DHT;
+          setRecentValue(avgTemp);
+          control();
+          return avgTemp;
+      }
+      void control() override {
+        if (checkControl() == 0) return;
+        else if (checkControl() == -1) {
+//          Serial.println("Air temperature below minThresh");
+        }
+        else {
+//          Serial.println("Air temperature above maxThresh");
+        }
+      }
 };
 
 class Humidity : public Sensor {
+    private:
+      dht DHT;
     public:
-        Humidity(String id, int pin, int readInterval, float minThresh, float maxThresh) 
-            : Sensor(id, pin, readInterval, minThresh, maxThresh) {}
-        float read() override {
-            Serial.println("Read humidity");
-            updateLastRead();
-            return (float) 2.2;
+        Humidity(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+            : Sensor(id, readInterval, minThresh, maxThresh) {}
+        void setupSensor() override {
+          for (int i = 0; i < NUM_DHT; i++) {
+            pinMode(DHT_PINS[i], OUTPUT);
+          }
+        }
+        float readSensor() override {
+          float avgHumidity = 0;
+          for (int i = 0; i < NUM_DHT; i++) {
+            DHT.read11(DHT_PINS[i]);
+            float humidity = DHT.humidity;
+            avgHumidity += humidity;
+          }
+          avgHumidity /= NUM_DHT;
+          setRecentValue(avgHumidity);
+          control();
+          return avgHumidity;
+        }
+        void control() override {
+          if (checkControl() == 0) {
+            digitalWrite(DEMO_LED_PIN, LOW);
+          }
+          else if (checkControl() == -1) {
+//            Serial.println("Humidity below minThresh");
+            digitalWrite(DEMO_LED_PIN, HIGH);
+          }
+          else {
+//            Serial.println("Humidity above maxThresh");
+            digitalWrite(DEMO_LED_PIN, HIGH);
+          }
         }
 };
+
+class SoilMoisture : public Sensor {
+    public:
+        SoilMoisture(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+            : Sensor(id, readInterval, minThresh, maxThresh) {}
+        void setupSensor() override {
+          pinMode(SOIL_MOISTURE_PIN, INPUT);
+        }
+        float readSensor() override {
+          // TODO: Fix conversion / decide how to represent
+          float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
+          float soil_moisture_percent = (float) map(soil_moisture, 0, 1023, 0, 100);
+          setRecentValue(soil_moisture_percent);
+          control();
+          return soil_moisture_percent;
+        }
+        void control() override {
+          if (checkControl() == 0) {
+            return;
+          }
+          else if (checkControl() == -1) {
+//            Serial.println("Soil moisture below minThresh");
+          }
+          else {
+//            Serial.println("Soil moisture above maxThresh");
+          }
+        }
+};
+
+class TDS : public Sensor {
+    public:
+        TDS(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+            : Sensor(id, readInterval, minThresh, maxThresh) {}
+        void setupSensor() override {
+          pinMode(TDS_PIN, INPUT);
+        }
+        float readSensor() override {
+          float analog_tds = analogRead(TDS_PIN);
+          float voltage = analog_tds * (float)VREF / 1024.0; // convert to voltage value
+          float curr_temp = recentAirTemp;
+          float compensation_coeff = 1.0 + 0.02 * (curr_temp - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
+          float compensation_voltage = voltage / compensation_coeff; //temperature compensation
+          float tds_value = (133.42 * compensation_voltage * compensation_voltage * compensation_voltage - 255.86 * compensation_voltage * compensation_voltage + 857.39 * compensation_voltage) * 0.5; //convert voltage value to tds value
+          setRecentValue(tds_value);
+          control();
+          return tds_value;
+        }
+        void control() override {
+          if (checkControl() == 0) {
+            return;
+          }
+          else if (checkControl() == -1) {
+//            Serial.println("TDS below minThresh");
+          }
+          else {
+//            Serial.println("TDS above maxThresh");
+          }
+        }
+};
+
 
 /* ih - Internal humidity (inside enclosure)
  * eh - External humidity (outside enclosure)
@@ -77,6 +265,68 @@ void sendDataMsg(String id, float data) {
   arduinoSerial.print(msg);
 }
 
+// Config for setting up Sensor objects
+// Read Timings (milliseconds)
+const unsigned int READ_INTERNAL_AIR_TEMP = 1000;
+const unsigned int READ_INTERNAL_HUMIDITY = 1000;
+const unsigned int READ_EXTERNAL_AIR_TEMP = 3000;
+const unsigned int READ_EXTERNAL_HUMIDITY = 3000;
+const unsigned int READ_SOIL_TEMP = 3000;
+const unsigned int READ_WATER_TEMP = 3000;
+const unsigned int READ_SOIL_MOISTURE = 3000;
+const unsigned int READ_TDS = 3000;
+const unsigned int READ_WATER_LEVEL = 10000;
+
+// Default threshold values - make these match the default javascript thresholds
+float HUMIDITY_MAX = 50;
+float HUMIDITY_MIN = 40;
+
+float AIR_TEMP_MAX = 30;
+float AIR_TEMP_MIN = 20;
+
+float SOIL_TEMP_MAX = 15;
+float SOIL_TEMP_MIN = 5;
+
+float SOIL_MOISTURE_MAX = 60;
+float SOIL_MOISTURE_MIN = 50;
+
+float WATER_TEMP_MAX = 15;
+float WATER_TEMP_MIN = 5;
+
+float TDS_MAX = 100;
+float TDS_MIN = 0;
+
+Humidity *ih = new Humidity("ih", READ_INTERNAL_HUMIDITY, HUMIDITY_MIN, HUMIDITY_MAX);
+AirTemperatureOW *it = new AirTemperatureOW("it", READ_INTERNAL_AIR_TEMP, AIR_TEMP_MIN, AIR_TEMP_MAX);
+AirTemperatureDHT *et = new AirTemperatureDHT("et", READ_INTERNAL_AIR_TEMP, AIR_TEMP_MIN, AIR_TEMP_MAX);
+SoilMoisture *sm = new SoilMoisture("sm", READ_SOIL_MOISTURE, SOIL_MOISTURE_MIN, SOIL_MOISTURE_MAX);
+TDS *td = new TDS("td", READ_TDS, TDS_MIN, TDS_MAX);
+
+Sensor* ss[] = {it, ih, et, sm, td};
+const int NUM_SENSORS = sizeof(ss)/sizeof(ss[0]);
+
+// Sensor Suite Operations
+void setupSensorSuite() {
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    ss[i]->setupSensor();
+  }
+}
+
+//void printSensorSuite(Sensor* sensors[], int size) {
+void printSensorSuite() {
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        ss[i]->printSensor();
+    }
+}
+
+void readSensorSuite() {
+    for (int i = 0; i < NUM_SENSORS; i++) {
+         if (ss[i]->readyToRead()) {
+          sendDataMsg(ss[i]->getId(), ss[i]->readSensor());
+        }
+    }
+}
+
 /*
  * wl - Water level (Water level is low)
  * ft - Filter time (Need to change filter)
@@ -90,174 +340,53 @@ void sendMaintenanceMsg(String id, String maint_msg) {
   arduinoSerial.print(msg);
 }
 
-// Sensor Suite Operations
-void print(Sensor* sensors[], int size) {
-    for (int i = 0; i < size; i++) {
-        sensors[i]->print();
-    }
+// Config for Maintenance components (water level, filter changing)
+const unsigned int CHECK_WATER_LEVEL = 10000; // 10 seconds
+const unsigned int CHECK_FILTER = 10000; // 10 seconds
+unsigned long lastWaterLevelCheck = 0;
+unsigned long lastFilterCheck = 0;
+unsigned long filterAge = 0;
+
+void checkWaterLevel() {
+  unsigned long currentTime = millis();
+  if ((currentTime - lastWaterLevelCheck) >= CHECK_WATER_LEVEL) {
+    int liquid_level = digitalRead(LIQUID_LEVEL_PIN);
+    sendMaintenanceMsg("wl", String(liquid_level));
+    lastWaterLevelCheck = currentTime;
+  }
 }
 
-void read(Sensor* sensors[], int size) {
-    for (int i = 0; i < size; i++) {
-        // if (sensors[i].readyToRead()) {
-        //   sendDataMsg(sensors[i]->getId(), sensors[i]->read());
-        //}
-        sendDataMsg(sensors[i]->getId(), sensors[i]->read());
-    }
+void resetFilterAge() {
+  filterAge = 0;
 }
 
-// TODO: Abstract these pin numbers
-SoftwareSerial arduinoSerial(12, 13);
+void checkFilter() {
+  unsigned long currentTime = millis();
+  if ((currentTime - lastFilterCheck) >= CHECK_FILTER) {
+    sendMaintenanceMsg("ft", String(filterAge));
+    lastFilterCheck = currentTime;
+  }
+}
 
-#define EOF '\n'
-#define VREF 5.0 // analog reference voltage of the ADC
-
-// Control Pins
-const int DEMO_LED_PIN = 8;
-
-// Sensor Pins
-#define SOIL_MOISTURE_PIN A1
-
-#define TDS_PIN A2
-
-#define LIQUID_LEVEL_PIN 52
-
-#define ONE_WIRE_PIN 3
-OneWire oneWire(ONE_WIRE_PIN);
-DallasTemperature ONE_WIRE(&oneWire);
-int ONE_WIRE_COUNT = 0;
-
-#define DHT_PIN 9
-dht DHT;
-
-// Read Timings (seconds)
-const int READ_INTERNAL_AIR_TEMP = 1;
-const int READ_INTERNAL_HUMIDITY = 1;
-const int READ_EXTERNAL_AIR_TEMP = 3;
-const int READ_EXTERNAL_HUMIDITY = 3;
-const int READ_SOIL_TEMP = 3;
-const int READ_WATER_TEMP = 3;
-const int READ_SOIL_MOISTURE = 5;
-const int READ_TDS = 5;
-const int READ_WATER_LEVEL = 10;
-
-float filter_timer;
-
-// Default control loop values - make these match the default javascript thresholds
-float int_humidity_max = 50;
-float int_humidity_min = 40;
-
-float int_air_temp_max = 30;
-float int_air_temp_min = 20;
-
-float soil_temp_max = 15;
-float soil_temp_min = 5;
-
-float soil_moisture_max = 60;
-float soil_moisture_min = 50;
-
-float water_temp_max = 15;
-float water_temp_min = 5;
-
-float tds_max = 100;
-float tds_min = 0;
-
+void checkMaintenance() {
+  checkWaterLevel();
+  checkFilter();
+}
 
 void setup() {
   // Serial to print
   Serial.begin(115200);
 
-  // TODO: replace current setup with this for each sensor
-  // Temperature *it1 = new Temperature("it", pin, READ_INTERNAL_AIR_TEMP, int_air_temp_min, int_air_temp_max)
-
-  pinMode(TDS_PIN, INPUT);
-  pinMode(SOIL_MOISTURE_PIN, INPUT);
+  setupSensorSuite();
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
-  ONE_WIRE.begin();
-  ONE_WIRE_COUNT = ONE_WIRE.getDeviceCount();
-
-
-  // TODO: Remove - used for demo
   pinMode(DEMO_LED_PIN, OUTPUT);
-  digitalWrite(DEMO_LED_PIN, LOW);
-
-  filter_timer = 0;
+  pinMode(MISTER_PIN, OUTPUT);
 
   // Start serial connection to NodeMCU
   arduinoSerial.begin(57600);
 
   delay(1000);
-}
-
-// TODO: Move read logic into respective classes
-// Read sensor data
-void readDHT() {
-  // TODO: Read all DHTs
-  int chk = DHT.read11(DHT_PIN); 
-}
-float readInternalAirTemp() {
-  // TODO: Average internal air temperature sensors
-  return readOneWire();
-}
-float readInternalHumidity() {
-  // TODO: Average internal humidity sensors
-  readDHT();
-  return DHT.humidity;
-}
-float readExternalAirTemp() {
-  // TODO: Read from whichever temp sensor is outside enclosure
-  return readOneWire() + random(5, 20);
-}
-float readExternalHumidity() {
-  // TODO: Read from whichever humidity sensor is outside enclosure
-  readDHT();
-  return DHT.humidity + random(5, 20);
-}
-float readTDS() {
-  float analog_tds = analogRead(TDS_PIN);
-  float voltage = analog_tds * (float)VREF / 1024.0; // convert to voltage value
-  float curr_temp = readInternalAirTemp();
-  float compensation_coeff = 1.0 + 0.02 * (curr_temp - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
-  float compensation_voltage = voltage / compensation_coeff; //temperature compensation
-  float tds_value = (133.42 * compensation_voltage * compensation_voltage * compensation_voltage - 255.86 * compensation_voltage * compensation_voltage + 857.39 * compensation_voltage) * 0.5; //convert voltage value to tds value
-  return tds_value;
-}
-
-float readWaterTemp() {
-  // TODO: Read whichever temp sensor is for water
-  float water_temp = 0;
-  return water_temp;
-}
-
-float readSoilTemp() {
-  // TODO: Read whichever temp sensor is for soil
-  float soil_temp = 0;
-  return soil_temp;
-}
-
-float readSoilMoisture() {
-  // TODO: Fix conversion / decide how to represent
-  float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
-  float soil_moisture_percent = (float) map(soil_moisture, 0, 1023, 0, 100);
-  return soil_moisture_percent;
-}
-
-float readOneWire() {
-  ONE_WIRE.requestTemperatures();
-  float avg_tempC = 0;
-  for (int i = 0; i < ONE_WIRE_COUNT; i++) {
-      float tempC = ONE_WIRE.getTempCByIndex(i);
-      avg_tempC += tempC;
-      // Serial.println(DallasTemperature::toFahrenheit(tempC));
-  }
-  avg_tempC = avg_tempC/ONE_WIRE_COUNT;
-  return avg_tempC;
-}
-int readLiquidLevel() {
-  // Returns 0 when water is low, 1 otherwise
-  int liquid_level = digitalRead(LIQUID_LEVEL_PIN);
-  return liquid_level;
 }
 
 // TODO: Set thresholds with classes instead of the default variables
@@ -276,28 +405,22 @@ void configThreshold(String config_str) {
   Serial.println("MIN: " + String(min_value) + " | MAX: " + String(max_value));
   
   if (config_type == "it") {
-    int_air_temp_min = min_value;
-    int_air_temp_max = max_value;
+    it->setThresholds(min_value, max_value);
   }
   else if (config_type == "ih") {
-    int_humidity_min = min_value;
-    int_humidity_max = max_value;
+    ih->setThresholds(min_value, max_value);
   }
   else if (config_type == "st") {
-    soil_temp_min = min_value;
-    soil_temp_max = max_value;
+//    st->setThresholds(min_value, max_value);
   }
   else if (config_type == "wt") {
-    water_temp_min = min_value;
-    water_temp_max = max_value;
+//    wt->setThresholds(min_value, max_value);
   }
   else if (config_type == "sm") {
-    soil_moisture_min = min_value;
-    soil_moisture_max = max_value;
+    sm->setThresholds(min_value, max_value);
   }
   else if (config_type == "td") {
-    tds_min = min_value;
-    tds_max = max_value;
+    td->setThresholds(min_value, max_value);
   }
   else {
     Serial.println("Unrecognized message type");
@@ -326,8 +449,7 @@ void processMessage(String msg) {
       configThreshold(config_str);
       break;
     case 'f':
-      // TODO: Reset filter timer - the message being received indicates that user changed filter
-      filter_timer = 0;
+      resetFilterAge();
       break;
     case 'l':
       configLEDBrightness(config_str);
@@ -340,84 +462,13 @@ void processMessage(String msg) {
 
 char c; // Used for reading characters over serial connection
 String dataIn; // Used to build strings using the characters (c) read over serial connection
-int clk = 0; // Used to read sensors on different intervals
-
-// TODO: Calculate this as max(all read times) + 1 | Manually set for now
-const int CLK_RESET = 11; // Reset timer to 0 when it reaches this value (read time of sensor with max read time)
-
-// TODO: Pick amount of time to change filters
-// const int FILTER_SWAP = 
-unsigned long current_time;
 
 // Main loop
 void loop() {
-  current_time = millis();
+  filterAge = millis();
+  readSensorSuite();
+  checkMaintenance();
   
-  // TODO: Update reading sensors to use classes instead
-  
-  // Read sensor data on different intervals
-  if (clk % READ_INTERNAL_AIR_TEMP == 0) {
-    float int_air_temp = readInternalAirTemp();
-    sendDataMsg("it", int_air_temp);
-  }
-
-  if (clk % READ_INTERNAL_HUMIDITY == 0) {
-    float int_humidity = readInternalHumidity();
-
-    // Control loop logic for internal humidity
-    if (int_humidity > int_humidity_max || int_humidity < int_humidity_min) {
-      digitalWrite(DEMO_LED_PIN, HIGH);
-    }
-    else {
-      digitalWrite(DEMO_LED_PIN, LOW);
-    }
-    
-    sendDataMsg("ih", int_humidity);
-  }
-
-  if (clk % READ_EXTERNAL_AIR_TEMP == 0) {
-    float ext_air_temp = readExternalAirTemp();
-    sendDataMsg("et", ext_air_temp);
-  }
-
-  if (clk % READ_EXTERNAL_HUMIDITY == 0) {
-    float ext_humidity = readExternalHumidity();
-    sendDataMsg("eh", ext_humidity);
-  }
-
-  if (clk % READ_WATER_TEMP == 0) {
-    float water_temp = readWaterTemp();
-//    sendDataMsg("wt", water_temp);
-  }
-
-  if (clk % READ_SOIL_TEMP == 0) {
-    float soil_temp = readSoilTemp();
-//    sendDataMsg("st", soil_temp);
-  }
-
-  if (clk % READ_SOIL_MOISTURE == 0) {
-    float soil_moisture = readSoilMoisture();
-    sendDataMsg("sm", soil_moisture);
-  }
-
-  if (clk % READ_TDS == 0) {
-    float tds = readTDS();
-    sendDataMsg("td", tds);
-  }
-
-  if (clk % READ_WATER_LEVEL == 0) {
-    int liquid_level = readLiquidLevel();
-    sendMaintenanceMsg("wl", String(liquid_level));
-  }
-  // TODO: Check filter time
- /*
- if ((current_time - filter_timer) >= FILTER_SWAP) {
-   unsigned long time_since_last_filter_change = (current_time - filter_timer);
-   // Send filter timer maintenance to be displayed on webpage
-   // sendMaintenanceMsg("ft", String(time_since_last_filter_change)); // Not sure what the msg should be/if there needs to be one
- }
- */ 
-
   // Receive messages over Serial connection
   while (arduinoSerial.available() > 0) {
     // Build dataIn message string
@@ -434,7 +485,4 @@ void loop() {
     c = 0;
     dataIn = "";
   }
-
-  clk = (clk + 1) % CLK_RESET;
-  delay(1000); // Wait 1 second between each reading
 }

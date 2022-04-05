@@ -23,7 +23,7 @@ const InfoPanel = () => {
                             <span id="maintenance-wl-indicator"></span>
                         </div>
                         <div class="mt-2 d-flex justify-content-center">
-                            <div class="w-50 py-2 rounded-pill" id="maintenance-filter">
+                            <div class="w-100 py-2 rounded-pill" id="maintenance-filter">
                                 Filter Quality:
                                 <span id="maintenance-filter-quality"></span>
                             </div>

@@ -10,29 +10,16 @@ $("#led-control").change((event) => {
     sendLEDBrightness(value)
 });
 
-const displayFilterQuality = (filter_time) => {
-    $("#maintenance-filter-quality").text(filter_time);
-    const filter_time_val = parseInt(filter_time);
+export const displayFilterQuality = (filter_time) => {
+    const filter_time_val = Math.floor((parseInt(filter_time))/1000);
+    $("#maintenance-filter-quality").text(filter_time_val);
     let color;
-    if (filter_time_val < 7) color = "lightgreen";
-    else if (filter_time < 9) color = "yellow";
+    if (filter_time_val < 60) color = "lightgreen"; // 1 minute
+    else if (filter_time < 120) color = "yellow"; // 2 minutes
     else color = "red";
     $("#maintenance-filter").css("backgroundColor", color);
 }
 
-export const handleMaintenance = (maint_msg) => {
-    // 1. Parse maint msg for type (first 2 chars)
-    const maint_type = maint_msg.substring(0, 2);
-    const maint_content = maint_msg.substring(3); // Don't want to include the ':'
-    switch (maint_type) {
-        case "wl":
-            $("#maintenance-wl-indicator").text(`${(maint_content == 1) ? "Good" : "Low"}`);
-            break;
-        case "ft":
-            displayFilterQuality(maint_content);
-            break;
-        default:
-            console.log("Unrecognized maintenance type.");
-            break;
-    }
+export const displayWaterLevelStatus = (water_level_bool) => {
+    $("#maintenance-wl-indicator").text(`${(parseInt(water_level_bool) === 1) ? "Good" : "Low"}`);
 }
