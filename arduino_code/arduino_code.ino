@@ -8,7 +8,6 @@
 // TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
 // TODO: Need to sent thresholds cleaner - get corrupted and misinterpretted a lot (add delay after send)
 // TODO: Make a generic Temperature class to subclass Water, soil and air
-// TODO: Implement filter age
 
 float recentAirTemp;
 
@@ -45,16 +44,19 @@ class Sensor {
       float recentValue;
       float minThresh;
       float maxThresh;
+      float avgThresh;
     public:
       Sensor(String _id, unsigned int _readInterval, float _minThresh, float _maxThresh) {
         id = _id;
         readInterval = _readInterval;
         minThresh = _minThresh;
         maxThresh = _maxThresh;
+        avgThresh = (maxThresh + minThresh) / 2;
       }
       void setThresholds(float _minThresh, float _maxThresh) { 
         minThresh = _minThresh;
         maxThresh = _maxThresh;
+        avgThresh = (maxThresh + minThresh) / 2;
       }
       void updateLastRead() { lastRead = millis(); }
       void setRecentValue(float _recentValue) {
@@ -66,8 +68,8 @@ class Sensor {
       bool readyToRead() { return ((millis() - lastRead) >= ((long) readInterval)); }
       void printSensor() { Serial.println("Min thresh: " + String(minThresh) + " | Max thresh: " + String(maxThresh)); }
       int checkControl() {
-        if (recentValue < minThresh) return -1;
-        else if (recentValue > maxThresh) return 1;
+        if (recentValue < avgThresh) return -1;
+        else if (recentValue > avgThresh) return 1;
         else return 0;
       }
       virtual float readSensor() { return (float) 0; } // Override to read sensor
@@ -164,6 +166,7 @@ class Humidity : public Sensor {
           for (int i = 0; i < NUM_DHT; i++) {
             DHT.read11(DHT_PINS[i]);
             float humidity = DHT.humidity;
+            Serial.println(String(i) + ": " + String(humidity));
             avgHumidity += humidity;
           }
           avgHumidity /= NUM_DHT;
@@ -173,15 +176,18 @@ class Humidity : public Sensor {
         }
         void control() override {
           if (checkControl() == 0) {
+            digitalWrite(MISTER_PIN, LOW);
             digitalWrite(DEMO_LED_PIN, LOW);
           }
           else if (checkControl() == -1) {
 //            Serial.println("Humidity below minThresh");
+            digitalWrite(MISTER_PIN, HIGH);
             digitalWrite(DEMO_LED_PIN, HIGH);
           }
           else {
 //            Serial.println("Humidity above maxThresh");
-            digitalWrite(DEMO_LED_PIN, HIGH);
+            digitalWrite(MISTER_PIN, LOW);
+            digitalWrite(DEMO_LED_PIN, LOW);
           }
         }
 };
@@ -302,7 +308,7 @@ AirTemperatureDHT *et = new AirTemperatureDHT("et", READ_INTERNAL_AIR_TEMP, AIR_
 SoilMoisture *sm = new SoilMoisture("sm", READ_SOIL_MOISTURE, SOIL_MOISTURE_MIN, SOIL_MOISTURE_MAX);
 TDS *td = new TDS("td", READ_TDS, TDS_MIN, TDS_MAX);
 
-Sensor* ss[] = {it, ih, et, sm, td};
+Sensor* ss[] = {ih};
 const int NUM_SENSORS = sizeof(ss)/sizeof(ss[0]);
 
 // Sensor Suite Operations
