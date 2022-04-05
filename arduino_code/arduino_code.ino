@@ -23,6 +23,7 @@ SoftwareSerial arduinoSerial(RX_PIN, TX_PIN);
 const int DEMO_LED_PIN = 8;
 
 #define MISTER_PIN 4
+#define LED_PIN 9
 
 // Sensor Pins
 #define TDS_PIN A0
@@ -34,6 +35,9 @@ const int DEMO_LED_PIN = 8;
 
 const unsigned int DHT_PINS[2] = {DHT_PIN1, DHT_PIN2};
 const int NUM_DHT = 2;
+
+// Start off
+bool day = false;
 
 
 class Sensor {
@@ -103,6 +107,7 @@ class AirTemperatureOW : public Sensor {
         setRecentValue(avgTempC);
         recentAirTemp = avgTempC;
         control();
+        Serial.println(avgTempC);
         return avgTempC;
       }
       void control() override {
@@ -267,7 +272,7 @@ class TDS : public Sensor {
 void sendDataMsg(String id, float data) {
   String msg = "";
   msg = "d:" + id + ":" + String(data) + EOF;
-  Serial.println("Sending data: " + msg);
+//  Serial.println("Sending data: " + msg);
   arduinoSerial.print(msg);
 }
 
@@ -308,7 +313,7 @@ AirTemperatureDHT *et = new AirTemperatureDHT("et", READ_INTERNAL_AIR_TEMP, AIR_
 SoilMoisture *sm = new SoilMoisture("sm", READ_SOIL_MOISTURE, SOIL_MOISTURE_MIN, SOIL_MOISTURE_MAX);
 TDS *td = new TDS("td", READ_TDS, TDS_MIN, TDS_MAX);
 
-Sensor* ss[] = {ih};
+Sensor* ss[] = {it};
 const int NUM_SENSORS = sizeof(ss)/sizeof(ss[0]);
 
 // Sensor Suite Operations
@@ -342,15 +347,17 @@ void readSensorSuite() {
 void sendMaintenanceMsg(String id, String maint_msg) {
   String msg = "";
   msg = "m:" + id + ":" + maint_msg + EOF;
-  Serial.println("Sending maintenance: " + msg);
+//  Serial.println("Sending maintenance: " + msg);
   arduinoSerial.print(msg);
 }
 
 // Config for Maintenance components (water level, filter changing)
 const unsigned int CHECK_WATER_LEVEL = 10000; // 10 seconds
 const unsigned int CHECK_FILTER = 10000; // 10 seconds
+const unsigned int CHECK_DAY_NIGHT_CYCLE = 60000; // 1 minute
 unsigned long lastWaterLevelCheck = 0;
 unsigned long lastFilterCheck = 0;
+unsigned long lastDayNightCheck = 0;
 unsigned long filterAge = 0;
 
 void checkWaterLevel() {
@@ -374,20 +381,58 @@ void checkFilter() {
   }
 }
 
+void configLEDBrightness(String brightness_str) {
+  float brightness = brightness_str.toFloat();
+//  Serial.println(brightness);
+  float brightness_map = map(brightness, 0, 100, 55, 0);
+  if (brightness_map >= 50) brightness_map = 255;
+//  Serial.println(brightness_map);
+  analogWrite(LED_PIN, brightness_map);
+}
+
+void dayCycle() {
+  unsigned long currentTime = millis();
+  unsigned long brightness = (currentTime - lastDayNightCheck);
+  float brightnessMap = map(brightness, 0, CHECK_DAY_NIGHT_CYCLE, 55, 0);
+  if (brightnessMap >= 50) brightnessMap = 255;
+  analogWrite(LED_PIN, brightnessMap);
+}
+
+void nightCycle() {
+  unsigned long currentTime = millis();
+  unsigned long brightness = (currentTime - lastDayNightCheck);
+  float brightnessMap = map(brightness, 0, CHECK_DAY_NIGHT_CYCLE, 0, 55);
+  if (brightnessMap >= 50) brightnessMap = 255;
+  analogWrite(LED_PIN, brightnessMap);
+}
+
+void checkDayNightCycle() {
+  unsigned long currentTime = millis();
+  if ((currentTime - lastDayNightCheck) >= CHECK_DAY_NIGHT_CYCLE) {
+    day = !day;
+    lastDayNightCheck = currentTime;
+  }
+}
+
 void checkMaintenance() {
   checkWaterLevel();
   checkFilter();
+//  checkDayNightCycle();
+//  if (day) dayCycle();
+//  else nightCycle();
 }
 
 void setup() {
   // Serial to print
   Serial.begin(115200);
+  TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz  
 
   setupSensorSuite();
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
   pinMode(DEMO_LED_PIN, OUTPUT);
   pinMode(MISTER_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
 
   // Start serial connection to NodeMCU
   arduinoSerial.begin(57600);
@@ -407,8 +452,8 @@ void configThreshold(String config_str) {
   String max_value_str = config_set.substring(config_set.indexOf(',') + 1, config_set.length());
   float max_value = max_value_str.toFloat();
 
-  Serial.println("Threshold Update for " + config_type);
-  Serial.println("MIN: " + String(min_value) + " | MAX: " + String(max_value));
+//  Serial.println("Threshold Update for " + config_type);
+//  Serial.println("MIN: " + String(min_value) + " | MAX: " + String(max_value));
   
   if (config_type == "it") {
     it->setThresholds(min_value, max_value);
@@ -429,16 +474,10 @@ void configThreshold(String config_str) {
     td->setThresholds(min_value, max_value);
   }
   else {
-    Serial.println("Unrecognized message type");
+//    Serial.println("Unrecognized message type");
   }
 }
 
-
-void configLEDBrightness(String brightness_str) {
-  float brightness = brightness_str.toFloat();
-  Serial.println(brightness);
-  // analogWrite(LED_PIN, brightness);
-}
 
 void processMessage(String msg) {
   /* Parse the message type received from NodeMCU
@@ -461,7 +500,7 @@ void processMessage(String msg) {
       configLEDBrightness(config_str);
       break;
     default:
-      Serial.println("Unrecognized Message type");
+//      Serial.println("Unrecognized Message type");
       break;
   }
 }
@@ -484,7 +523,7 @@ void loop() {
   }
   // EOF is reached
   if (c == EOF) {
-    Serial.println(dataIn);
+//    Serial.println(dataIn);
     // Process the completed message
     processMessage(dataIn);
     // Reset variables
