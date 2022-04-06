@@ -125,6 +125,9 @@ void setup() {
   server.on("/info_panel_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/info_panel_component.js", "text/javascript");
   });
+  server.on("/status_bar.js", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/status_bar.js", "text/javascript");
+  });
   server.on("/dashboard.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/dashboard.js", "text/javascript");
   });

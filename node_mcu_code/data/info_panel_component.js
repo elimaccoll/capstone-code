@@ -1,5 +1,5 @@
 const InfoPanel = () => {
-    return (`
+  return `
         <div class="row">
             <ul class="nav nav-tabs mt-1">
                 <li class="nav-item">
@@ -56,6 +56,6 @@ const InfoPanel = () => {
                 </div>
             </div>
         </div>
-    `);
+    `;
 };
 export default InfoPanel;

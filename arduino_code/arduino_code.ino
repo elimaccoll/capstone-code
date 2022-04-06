@@ -6,8 +6,9 @@
 // TODO: Figure out delay timing on setup
 // TODO: Clean up message parsing
 // TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
-// TODO: Need to sent thresholds cleaner - get corrupted and misinterpretted a lot (add delay after send)
+// TODO: Need to send thresholds cleaner - get corrupted and misinterpretted a lot (add delay after send)
 // TODO: Make a generic Temperature class to subclass Water, soil and air
+// TODO: Add the ability to set day/night cycle duration
 
 float recentAirTemp;
 
@@ -425,7 +426,7 @@ void checkMaintenance() {
 void setup() {
   // Serial to print
   Serial.begin(115200);
-  TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz  
+  TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz - Pins 9 and 10
 
   setupSensorSuite();
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
@@ -440,7 +441,7 @@ void setup() {
   delay(1000);
 }
 
-// TODO: Set thresholds with classes instead of the default variables
+
 void configThreshold(String config_str) {
   // TODO: Clean this up
   String config_type = config_str.substring(0, config_str.indexOf(':'));
@@ -452,8 +453,8 @@ void configThreshold(String config_str) {
   String max_value_str = config_set.substring(config_set.indexOf(',') + 1, config_set.length());
   float max_value = max_value_str.toFloat();
 
-//  Serial.println("Threshold Update for " + config_type);
-//  Serial.println("MIN: " + String(min_value) + " | MAX: " + String(max_value));
+  // Serial.println("Threshold Update for " + config_type);
+  // Serial.println("MIN: " + String(min_value) + " | MAX: " + String(max_value));
   
   if (config_type == "it") {
     it->setThresholds(min_value, max_value);
@@ -474,7 +475,7 @@ void configThreshold(String config_str) {
     td->setThresholds(min_value, max_value);
   }
   else {
-//    Serial.println("Unrecognized message type");
+   Serial.println("Unrecognized message type");
   }
 }
 
@@ -500,7 +501,7 @@ void processMessage(String msg) {
       configLEDBrightness(config_str);
       break;
     default:
-//      Serial.println("Unrecognized Message type");
+      Serial.println("Unrecognized Message type");
       break;
   }
 }
@@ -523,7 +524,7 @@ void loop() {
   }
   // EOF is reached
   if (c == EOF) {
-//    Serial.println(dataIn);
+    // Serial.println(dataIn);
     // Process the completed message
     processMessage(dataIn);
     // Reset variables
