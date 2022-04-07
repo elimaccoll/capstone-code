@@ -11,16 +11,18 @@ content.push($("#help-content"));
 content.push($("#plant-content"));
 content.push($("#about-content"));
 
-let active_tab = 0;
+let activeTab = 0;
 
 for (let i = 0; i < tabs.length; i++) {
-    let tab = tabs[i];
-    tab.click(() => {
-        if (active_tab == i) { return; }
-        tab.addClass("active");
-        tabs[active_tab].removeClass("active");
-        content[i].removeClass("d-none");
-        content[active_tab].addClass("d-none");
-        active_tab = i;
-    });
+  let tab = tabs[i];
+  tab.click(() => {
+    if (activeTab == i) {
+      return;
+    }
+    tab.addClass("active");
+    tabs[activeTab].removeClass("active");
+    content[i].removeClass("d-none");
+    content[activeTab].addClass("d-none");
+    activeTab = i;
+  });
 }

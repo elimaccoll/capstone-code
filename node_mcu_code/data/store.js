@@ -1,52 +1,61 @@
+// TODO: Add filter age and water level to local storage (load and store)
+
 const DATA_BUFFER = 20; // Store a buffer of 20 data points for each plot
 
 // Clear local storage
-const clear_btn = document.getElementById("clear-data-btn");
-clear_btn.addEventListener('click', () => {
-    window.onload = () => {
-        localStorage.clear();
-    }
-    window.onunload = () => {
-        localStorage.clear();
-    }
-    window.location.reload();
+const clearBtn = document.getElementById("clear-data-btn");
+clearBtn.addEventListener("click", () => {
+  window.onload = () => {
+    localStorage.clear();
+  };
+  window.onunload = () => {
+    localStorage.clear();
+  };
+  window.location.reload();
 });
 
-const getIndexFromName = (chart_arr, chart_name) => {
-    for (let i = 0; i < chart_arr.length; i++) {
-        let curr_chart_name = chart_arr[i].name;
-        if (curr_chart_name === chart_name) {
-            return i;
-        };
+const getIndexFromName = (chartArr, chartName) => {
+  for (let i = 0; i < chartArr.length; i++) {
+    let currChartName = chartArr[i].name;
+    if (currChartName === chartName) {
+      return i;
     }
-    return -1;
-}
+  }
+  return -1;
+};
 
-export const storeThresholds = (chart_name, minThreshold, maxThreshold) => {
-    let charts = JSON.parse(localStorage.charts);
-    const index = getIndexFromName(charts, chart_name);
-    if (index === -1) { return; }
-    charts[index].config.minThreshold = minThreshold;
-    charts[index].config.maxThreshold = maxThreshold;
-    localStorage.charts = JSON.stringify(charts);
-}
+export const storeThresholds = (chartName, minThresh, maxThresh) => {
+  let charts = JSON.parse(localStorage.charts);
+  const index = getIndexFromName(charts, chartName);
+  if (index === -1) {
+    return;
+  }
+  charts[index].config.minThreshold = minThresh;
+  charts[index].config.maxThreshold = maxThresh;
+  localStorage.charts = JSON.stringify(charts);
+};
 
-export const storeDataBuffer = (chart_name, plot_point, series_ind) => {
-    let charts = JSON.parse(localStorage.charts);
-    const index = getIndexFromName(charts, chart_name);
-    if (index === -1) { return; }
-    let curr_buffer;
-    if (series_ind == 0) {
-        curr_buffer = charts[index].config.data1;
-        if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-        curr_buffer.push(plot_point);
-        charts[index].config.data1 = curr_buffer;
+export const storeDataBuffer = (chartName, plotPoint, seriesInd) => {
+  let charts = JSON.parse(localStorage.charts);
+  const index = getIndexFromName(charts, chartName);
+  if (index === -1) {
+    return;
+  }
+  let currBuffer;
+  if (seriesInd == 0) {
+    currBuffer = charts[index].config.data1;
+    if (currBuffer.length >= DATA_BUFFER) {
+      currBuffer.shift();
     }
-    else if (series_ind == 1) {
-        curr_buffer = charts[index].config.data2;
-        if (curr_buffer.length >= DATA_BUFFER) { curr_buffer.shift(); }
-        curr_buffer.push(plot_point);
-        charts[index].config.data2 = curr_buffer;
+    currBuffer.push(plotPoint);
+    charts[index].config.data1 = currBuffer;
+  } else if (seriesInd == 1) {
+    currBuffer = charts[index].config.data2;
+    if (currBuffer.length >= DATA_BUFFER) {
+      currBuffer.shift();
     }
-    localStorage.charts = JSON.stringify(charts);
-}
+    currBuffer.push(plotPoint);
+    charts[index].config.data2 = currBuffer;
+  }
+  localStorage.charts = JSON.stringify(charts);
+};

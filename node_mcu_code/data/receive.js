@@ -1,6 +1,6 @@
 import { addPlotPoint } from "./charts.js";
 import {
-  displayFilterQuality,
+  displayFilterQuality as displayFilterAge,
   displayWaterLevelStatus,
 } from "./maintenance.js";
 import charts from "./charts_to_render.js";
@@ -14,8 +14,9 @@ if (active) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
-        const value = this.responseText;
-        displayWaterLevelStatus(value);
+        const valueStr = this.responseText;
+        if (valueStr != "0" || valueStr != "1") return;
+        displayWaterLevelStatus(valueStr);
       }
     };
     xhttp.open("GET", "/water_level", true);
@@ -26,8 +27,9 @@ if (active) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
-        const value = this.responseText;
-        displayFilterQuality(value);
+        const valueStr = this.responseText;
+        if (isNaN(valueStr)) return;
+        displayFilterAge(valueStr);
       }
     };
     xhttp.open("GET", "/filter_age", true);
@@ -44,7 +46,9 @@ if (active) {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
           if (this.readyState == 4 && this.status == 200) {
-            const value = parseFloat(this.responseText);
+            const valueStr = this.responseText;
+            if (isNaN(valueStr)) return;
+            const value = parseFloat(valueStr);
             addPlotPoint(chart.name, value, i);
           }
         };
@@ -74,12 +78,12 @@ const generateTestData = () => {
   });
   // Testing Maintenance
   setInterval(() => {
-    let water_level = Math.floor(Math.random() * 2);
-    displayWaterLevelStatus(water_level);
+    let waterLevel = Math.floor(Math.random() * 2);
+    displayWaterLevelStatus(waterLevel);
   }, 1000);
-  let filter_time = 0;
+  let filterAge = 0;
   setInterval(() => {
-    filter_time += 1000;
-    displayFilterQuality(filter_time);
+    filterAge += 1000;
+    displayFilterAge(filterAge);
   }, 1000);
 };
