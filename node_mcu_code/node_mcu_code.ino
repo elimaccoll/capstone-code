@@ -8,7 +8,8 @@
 // Library for File system (use HTML and CSS files)
 #include <FS.h>
 
-//TODO: Work on timings to minimize corrupted messages
+// TODO: Work on timings to minimize corrupted messages
+// TODO: Single point of control for writing over serial connection
 
 SoftwareSerial nodeSerial(D1, D2);
 
@@ -22,45 +23,46 @@ const char* password = "123456789";
 // Create Async Web Server
 AsyncWebServer server(80);
 
-String internal_air_temp;
-String internal_humidity;
-String external_air_temp;
-String external_humidity;
-String water_temp;
-String soil_moisture;
-String soil_temp;
+String intAirTemp;
+String intHumidity;
+String extAirTemp;
+String extHumidity;
+String waterTemp;
+String soilMoisture;
+String soilTemp;
 String tds;
 
-String water_level;
-String filter_age;
+String waterLevel;
+String filterAge;
 
+// Maintenance Data
 String getWaterLevel() {
-  return water_level;
+  return waterLevel;
 }
 String getFilterAge() {
-  return filter_age;
+  return filterAge;
 }
-
+// Sensor Data
 String getInternalAirTemp() {
-  return internal_air_temp;
+  return intAirTemp;
 }
 String getExternalAirTemp() {
-  return external_air_temp;
+  return extAirTemp;
 }
 String getInternalHumidity() {
-  return internal_humidity;
+  return intHumidity;
 }
 String getExternalHumidity() {
-  return external_humidity;
+  return extHumidity;
 }
 String getWaterTemp() {
-  return water_temp;
+  return waterTemp;
 }
 String getSoilTemp() {
-  return soil_temp;
+  return soilTemp;
 }
 String getSoilMoisture() {
-  return soil_moisture;
+  return soilMoisture;
 }
 String getTDS() {
   return tds;
@@ -71,6 +73,7 @@ void setup() {
   
   // Setup Serial Connection
   nodeSerial.begin(57600);
+  delay(1000);
 
   // Setup Async Web Server
   Serial.println();
@@ -155,7 +158,8 @@ void setup() {
   server.on("/receive.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/receive.js", "text/javascript");
   });
-  
+  delay(1000);
+
   // Routes to send data to web page
   // Route to send internal air temperature reading
   server.on("/internal_air_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -200,16 +204,17 @@ void setup() {
   
   // Route to get threshold values from UI
   server.on("/threshold_control", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String type, min_value, max_value, msg;
+    String type, minThresh, maxThresh, msg;
     // Can check for multiple specific parameters when dealing different controls on actuators being changed (min, max, etc.)
     if (request->hasParam("type") && request->hasParam("min") && request->hasParam("max")) {
       // Parse Route URL for parameters
       type = request->getParam("type")->value();
-      min_value = request->getParam("min")->value();
-      max_value = request->getParam("max")->value();
+      minThresh = request->getParam("min")->value();
+      maxThresh = request->getParam("max")->value();
       // Send to Arduino
-      msg = "t:" + type + ":" + min_value + "," + max_value + EOF;
+      msg = "t:" + type + ":" + minThresh + "," + maxThresh + EOF;
       nodeSerial.print(msg);
+      delay(100);
     }
     else {
       Serial.println("Missing parameter");
@@ -225,6 +230,7 @@ void setup() {
       // Send to Arduino
       msg = "l:" + brightness + EOF;
       nodeSerial.print(msg);
+      delay(100);
     }
     else {
       Serial.println("Missing parameter");
@@ -235,32 +241,33 @@ void setup() {
 }
 
 
-void parseData(String data_str) {
-  String data_type = data_str.substring(0, data_str.indexOf(':'));
-  String data = data_str.substring(data_str.indexOf(':') + 1, data_str.length());
-  if (data_type == "ih") {
-    internal_humidity = data;
+void parseData(String msg) {
+  unsigned int idDelim = msg.indexOf(':');
+  String id = msg.substring(0, idDelim);
+  String value = msg.substring(idDelim + 1, msg.length());
+  if (id == "ih") {
+    intHumidity = value;
   }
-  else if (data_type == "eh") {
-    external_humidity = data;
+  else if (id == "eh") {
+    extHumidity = value;
   }
-  else if (data_type == "it") {
-    internal_air_temp = data;
+  else if (id == "it") {
+    intAirTemp = value;
   }
-  else if (data_type == "et") {
-    external_air_temp = data;
+  else if (id == "et") {
+    extAirTemp = value;
   }
-  else if (data_type == "wt") {
-    water_temp = data;
+  else if (id == "wt") {
+    waterTemp = value;
   }
-  else if (data_type == "st") {
-    soil_temp = data;
+  else if (id == "st") {
+    soilTemp = value;
   }
-  else if (data_type == "sm") {
-    soil_moisture = data;
+  else if (id == "sm") {
+    soilMoisture = value;
   }
-  else if (data_type == "td") {
-    tds = data;
+  else if (id == "td") {
+    tds = value;
   }
   else {
     Serial.println("Unrecognized Data Type");
@@ -268,14 +275,15 @@ void parseData(String data_str) {
 }
 
 
-void parseMaintenance(String maint_str) {
-  String maint_type = maint_str.substring(0, maint_str.indexOf(':'));
-  String value = maint_str.substring(maint_str.indexOf(':') + 1, maint_str.length());
-  if (maint_type == "wl") {
-    water_level = value;
+void parseMaintenance(String msg) {
+  unsigned int idDelim = msg.indexOf(':');
+  String id = msg.substring(0, idDelim);
+  String value = msg.substring(idDelim + 1, msg.length());
+  if (id == "wl") {
+    waterLevel = value;
   }
-  else if (maint_type == "ft") {
-    filter_age = value;
+  else if (id == "ft") {
+    filterAge = value;
   }
   else {
     Serial.println("Unrecognized Maint Type");
@@ -283,14 +291,14 @@ void parseMaintenance(String maint_str) {
 }
 
 void processMessage(String msg) {
-  char msg_type = msg.charAt(0);
-  String msg_str = msg.substring(2, msg.length());
-  switch(msg_type) {
+  char msgType = msg.charAt(0);
+  String msgContent = msg.substring(2, msg.length());
+  switch(msgType) {
     case 'd':
-      parseData(msg_str);
+      parseData(msgContent);
       break;
     case 'm':
-      parseMaintenance(msg_str);
+      parseMaintenance(msgContent);
       break;
     default:
       Serial.println("Unrecognized Message Type");

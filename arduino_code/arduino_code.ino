@@ -10,6 +10,8 @@
 // TODO: Add the ability to set day/night cycle duration
 // TODO: Add some indicator light when threshold message corrupt? new threshold not set
 // TODO: Test filter change button
+// TODO: Single point of control for writing over serial connection
+
 
 float recentAirTemp;
 
