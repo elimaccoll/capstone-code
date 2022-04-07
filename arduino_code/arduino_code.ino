@@ -4,11 +4,12 @@
 #include <dht.h>
 
 // TODO: Figure out delay timing on setup
-// TODO: Clean up message parsing
 // TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
 // TODO: Need to send thresholds cleaner - get corrupted and misinterpretted a lot (add delay after send)
 // TODO: Make a generic Temperature class to subclass Water, soil and air
 // TODO: Add the ability to set day/night cycle duration
+// TODO: Add some indicator light when threshold message corrupt? new threshold not set
+// TODO: Test filter change button
 
 float recentAirTemp;
 
@@ -58,7 +59,9 @@ class Sensor {
         maxThresh = _maxThresh;
         avgThresh = (maxThresh + minThresh) / 2;
       }
-      void setThresholds(float _minThresh, float _maxThresh) { 
+      bool verifyThresholds(float _minThresh, float _maxThresh) { return (_minThresh < _maxThresh); }
+      void setThresholds(float _minThresh, float _maxThresh) {
+        if (!verifyThresholds(_minThresh, _maxThresh)) return;
         minThresh = _minThresh;
         maxThresh = _maxThresh;
         avgThresh = (maxThresh + minThresh) / 2;
@@ -186,12 +189,12 @@ class Humidity : public Sensor {
             digitalWrite(DEMO_LED_PIN, LOW);
           }
           else if (checkControl() == -1) {
-//            Serial.println("Humidity below minThresh");
+            // Below threshold average
             digitalWrite(MISTER_PIN, HIGH);
             digitalWrite(DEMO_LED_PIN, HIGH);
           }
           else {
-//            Serial.println("Humidity above maxThresh");
+            // Above threshold average
             digitalWrite(MISTER_PIN, LOW);
             digitalWrite(DEMO_LED_PIN, LOW);
           }
@@ -207,11 +210,11 @@ class SoilMoisture : public Sensor {
         }
         float readSensor() override {
           // TODO: Fix conversion / decide how to represent
-          float soil_moisture = analogRead(SOIL_MOISTURE_PIN);
-          float soil_moisture_percent = (float) map(soil_moisture, 0, 1023, 0, 100);
-          setRecentValue(soil_moisture_percent);
+          float soilMoisture = analogRead(SOIL_MOISTURE_PIN);
+          float soilMoisturePercent = (float) map(soilMoisture, 0, 1023, 0, 100);
+          setRecentValue(soilMoisturePercent);
           control();
-          return soil_moisture_percent;
+          return soilMoisturePercent;
         }
         void control() override {
           if (checkControl() == 0) {
@@ -234,15 +237,15 @@ class TDS : public Sensor {
           pinMode(TDS_PIN, INPUT);
         }
         float readSensor() override {
-          float analog_tds = analogRead(TDS_PIN);
-          float voltage = analog_tds * (float)VREF / 1024.0; // convert to voltage value
-          float curr_temp = recentAirTemp;
-          float compensation_coeff = 1.0 + 0.02 * (curr_temp - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
-          float compensation_voltage = voltage / compensation_coeff; //temperature compensation
-          float tds_value = (133.42 * compensation_voltage * compensation_voltage * compensation_voltage - 255.86 * compensation_voltage * compensation_voltage + 857.39 * compensation_voltage) * 0.5; //convert voltage value to tds value
-          setRecentValue(tds_value);
+          float analogTDS = analogRead(TDS_PIN);
+          float voltage = analogTDS * (float)VREF / 1024.0; // convert to voltage value
+          float currTemp = recentAirTemp;
+          float compCoeff = 1.0 + 0.02 * (currTemp - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
+          float compVoltage = voltage / compCoeff; //temperature compensation
+          float tdsValue = (133.42 * compVoltage * compVoltage * compVoltage - 255.86 * compVoltage * compVoltage + 857.39 * compVoltage) * 0.5; //convert voltage value to tds value
+          setRecentValue(tdsValue);
           control();
-          return tds_value;
+          return tdsValue;
         }
         void control() override {
           if (checkControl() == 0) {
@@ -275,6 +278,7 @@ void sendDataMsg(String id, float data) {
   msg = "d:" + id + ":" + String(data) + EOF;
 //  Serial.println("Sending data: " + msg);
   arduinoSerial.print(msg);
+  delay(100);
 }
 
 // Config for setting up Sensor objects
@@ -350,6 +354,7 @@ void sendMaintenanceMsg(String id, String maint_msg) {
   msg = "m:" + id + ":" + maint_msg + EOF;
 //  Serial.println("Sending maintenance: " + msg);
   arduinoSerial.print(msg);
+  delay(100);
 }
 
 // Config for Maintenance components (water level, filter changing)
@@ -382,12 +387,11 @@ void checkFilter() {
   }
 }
 
+// Used for controller LED through UI
 void configLEDBrightness(String brightness_str) {
   float brightness = brightness_str.toFloat();
-//  Serial.println(brightness);
   float brightness_map = map(brightness, 0, 100, 55, 0);
   if (brightness_map >= 50) brightness_map = 255;
-//  Serial.println(brightness_map);
   analogWrite(LED_PIN, brightness_map);
 }
 
@@ -442,40 +446,53 @@ void setup() {
 }
 
 
-void configThreshold(String config_str) {
-  // TODO: Clean this up
-  String config_type = config_str.substring(0, config_str.indexOf(':'));
-  String config_set = config_str.substring(config_str.indexOf(':') + 1, config_str.length());
+bool stringIsFloat(String str) {
+  char c;
+  for (int i = 0; i < str.length(); i++) {
+    c = str[i];
+    if (!isDigit(c) && c != '.') return false;
+  }
+  return true;
+}
 
-  // TODO: Should check if valid before doing this
-  String min_value_str = config_set.substring(0, config_set.indexOf(','));
-  float min_value = min_value_str.toFloat();
-  String max_value_str = config_set.substring(config_set.indexOf(',') + 1, config_set.length());
-  float max_value = max_value_str.toFloat();
+void configThreshold(String msg) {
+  unsigned int idDelim = msg.indexOf(':');
+  String id = msg.substring(0, idDelim);
+  String thresholdStr = msg.substring(idDelim + 1, msg.length());
 
-  // Serial.println("Threshold Update for " + config_type);
-  // Serial.println("MIN: " + String(min_value) + " | MAX: " + String(max_value));
+  unsigned int valDelim = thresholdStr.indexOf(',');
+  String minThreshStr = thresholdStr.substring(0, valDelim);
+  String maxThreshStr = thresholdStr.substring(valDelim + 1, thresholdStr.length());
+
+  // Message was corrupted
+  if (!stringIsFloat(minThreshStr) || !stringIsFloat(maxThreshStr)) return;
+
+  float minThresh = minThreshStr.toFloat();
+  float maxThresh = maxThreshStr.toFloat();
+
+  // Serial.println("Threshold Update for " + id);
+  // Serial.println("MIN: " + String(minThresh) + " | MAX: " + String(maxThresh));
   
-  if (config_type == "it") {
-    it->setThresholds(min_value, max_value);
+  if (id == "it") {
+    it->setThresholds(minThresh, maxThresh);
   }
-  else if (config_type == "ih") {
-    ih->setThresholds(min_value, max_value);
+  else if (id == "ih") {
+    ih->setThresholds(minThresh, maxThresh);
   }
-  else if (config_type == "st") {
-//    st->setThresholds(min_value, max_value);
+  else if (id == "st") {
+//    st->setThresholds(minThresh, maxThresh);
   }
-  else if (config_type == "wt") {
-//    wt->setThresholds(min_value, max_value);
+  else if (id == "wt") {
+//    wt->setThresholds(minThresh, maxThresh);
   }
-  else if (config_type == "sm") {
-    sm->setThresholds(min_value, max_value);
+  else if (id == "sm") {
+    sm->setThresholds(minThresh, maxThresh);
   }
-  else if (config_type == "td") {
-    td->setThresholds(min_value, max_value);
+  else if (id == "td") {
+    td->setThresholds(minThresh, maxThresh);
   }
   else {
-   Serial.println("Unrecognized message type");
+   Serial.println("Unrecognized sensor id for setting thresholds");
   }
 }
 
@@ -487,18 +504,18 @@ void processMessage(String msg) {
    *  l - Lights
    *  E.g. msg = "l:64\n", msg = "t:sm:30,40\n"
    */ 
-  char msg_type = msg.charAt(0);
-  String config_str = msg.substring(2, msg.length());
+  char msgType = msg.charAt(0);
+  String msgContent = msg.substring(2, msg.length());
   
-  switch(msg_type) {
+  switch(msgType) {
     case 't':
-      configThreshold(config_str);
+      configThreshold(msgContent);
       break;
     case 'f':
       resetFilterAge();
       break;
     case 'l':
-      configLEDBrightness(config_str);
+      configLEDBrightness(msgContent);
       break;
     default:
       Serial.println("Unrecognized Message type");
