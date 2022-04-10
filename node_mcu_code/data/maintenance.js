@@ -20,8 +20,8 @@ export const displayFilterQuality = (filterAgeStr) => {
   $("#maintenance-filter").css("backgroundColor", color);
 };
 
-export const displayWaterLevelStatus = (waterLevel) => {
-  $("#maintenance-wl-indicator").text(
-    `${parseInt(waterLevel) === 1 ? "Good" : "Low"}`
-  );
+export const displayWaterLevelStatus = (waterLevelStr) => {
+  const waterLevel = parseInt(waterLevelStr);
+  const waterLevelMsg = waterLevel === 1 ? "Good" : "Low";
+  $("#maintenance-wl-indicator").text(waterLevelMsg);
 };

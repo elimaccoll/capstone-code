@@ -15,7 +15,6 @@ if (active) {
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         const valueStr = this.responseText;
-        if (valueStr != "0" || valueStr != "1") return;
         displayWaterLevelStatus(valueStr);
       }
     };
