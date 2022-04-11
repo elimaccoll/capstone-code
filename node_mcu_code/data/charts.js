@@ -22,11 +22,13 @@ export const addPlotPoint = (chartName, plotPoint, seriesInd = 0) => {
   const plot_point = { x: time, y: plotPoint };
 
   chart.series[seriesInd].addPoint(plot_point);
+  storeDataBuffer(chartName, plot_point, seriesInd);
+
+  if (seriesInd !== 0) return;
   updateStatus(
     chartName,
     calculateStatus(plotPoint, CONFIG.minThreshold, CONFIG.maxThreshold)
   );
-  storeDataBuffer(chartName, plot_point, seriesInd);
 };
 
 const verifyPlotThresholds = (

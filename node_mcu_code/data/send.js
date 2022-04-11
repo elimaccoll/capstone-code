@@ -29,6 +29,6 @@ export const sendLEDBrightness = (brightness) => {
 
 export const sendFilterChanged = () => {
   var xhttp = new XMLHttpRequest();
-  xhttp.open("GET", `/filter_changed`, true);
+  xhttp.open("GET", "/filter_changed?age=0", true);
   xhttp.send();
 };

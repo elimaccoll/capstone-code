@@ -5,7 +5,7 @@ import {
 } from "./maintenance.js";
 import charts from "./charts_to_render.js";
 
-let active = false;
+let active = true;
 
 const MAINTENANCE_INTERVAL = 10;
 if (active) {
@@ -27,7 +27,7 @@ if (active) {
     xhttp.onreadystatechange = function () {
       if (this.readyState == 4 && this.status == 200) {
         const valueStr = this.responseText;
-        if (isNaN(valueStr)) return;
+        if (isNaN(valueStr) || !valueStr) return;
         displayFilterAge(valueStr);
       }
     };
@@ -46,7 +46,7 @@ if (active) {
         xhttp.onreadystatechange = function () {
           if (this.readyState == 4 && this.status == 200) {
             const valueStr = this.responseText;
-            if (isNaN(valueStr)) return;
+            if (isNaN(valueStr) || !valueStr) return;
             const value = parseFloat(valueStr);
             addPlotPoint(chart.name, value, i);
           }

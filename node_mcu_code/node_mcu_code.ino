@@ -10,9 +10,8 @@
 
 // TODO: Work on timing of loading scripts to improve page load
 // TODO: Work on timings to minimize corrupted messages
+//        - Gets pretty bad with a lot of sensors - message queueing?
 // TODO: Responses - response->send() ?
-// TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
-//       - TEST MY FIX TO THIS | I just reset each value string to "" after sending to UI
 
 SoftwareSerial nodeSerial(D1, D2);
 
@@ -277,10 +276,16 @@ void setup() {
 
   // Route to reset filter age in Arduino
   server.on("/filter_changed", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String msg;
-    // Send to Arduino
-    msg = "f" + EOF;
-    sendSerial(msg);
+    String age, msg;
+    if (request->hasParam("age")) {
+      age = request->getParam("age")->value();
+      // Send to Arduino
+      msg = "f:" + age + EOF;
+      sendSerial(msg);
+    }
+    else {
+      Serial.println("Missing parameter");
+    }
   });
 
   server.begin();
@@ -363,7 +368,7 @@ void loop() {
     else {dataIn += c;}
   }
   if (c == EOF) {
-    Serial.println(dataIn);
+    // Serial.println(dataIn);
     processMessage(dataIn);
     c = 0;
     dataIn = "";

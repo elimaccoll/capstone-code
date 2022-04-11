@@ -12,7 +12,7 @@ const StatusBarItem = (chart_name, chart_title) => {
 
 const StatusBar = () => {
   return `
-      <div class="fixed-bottom">
+      <div class="fixed-bottom d-none d-md-block">
         <ul class="row list-group list-group-horizontal">
           ${charts
             .map((chart) =>

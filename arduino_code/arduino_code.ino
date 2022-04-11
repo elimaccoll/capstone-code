@@ -3,13 +3,14 @@
 #include <SoftwareSerial.h>
 #include <dht.h>
 
-// TODO: Figure out delay timing on setup
-// TODO: Test out the impact of adding delay after sending thresholds
-// TODO: Add the ability to set day/night cycle duration - TEST
-// TODO: Add some indicator when threshold message corrupt? new threshold not set
-// TODO: Pull out function for parsing the message format - TEST and implement everywhere
+// TOOD: Implement
+// Figure out delay timing on setup
+// Message queueing to avoid corruptions
+// Add some indicator when threshold message corrupt? new threshold not set
 
-// TODO: Verify soil moisture
+// TODO: Testing
+// Day/Night cycle with actual LED
+// Soil moisture conversion
 
 float recentAirTemp;
 
@@ -274,7 +275,7 @@ class SoilMoisture : public Sensor {
         float readSensor() override {
           // TODO: Fix conversion / decide how to represent
           float soilMoisture = analogRead(SOIL_MOISTURE_PIN);
-          Serial.println(soilMoisture);
+          // Serial.println(soilMoisture);
           float soilMoisturePercent = (float) map(soilMoisture, 0, 1023, 0, 100);
           setRecentValue(soilMoisturePercent);
           control();
@@ -354,7 +355,7 @@ bool stringIsFloat(String str) {
 void sendDataMsg(String id, float data) {
   String msg = "";
   msg = "d:" + id + ":" + String(data) + EOF;
-//  Serial.println("Sending data: " + msg);
+  Serial.println("Sending data: " + msg);
   sendSerial(msg);
 }
 
@@ -447,16 +448,17 @@ void getValuesFromMsg(String* arr, String msg) {
 void sendMaintenanceMsg(String id, String maint_msg) {
   String msg = "";
   msg = "m:" + id + ":" + maint_msg + EOF;
-//  Serial.println("Sending maintenance: " + msg);
+  Serial.println("Sending maintenance: " + msg);
   sendSerial(msg);
 }
 
 // Config for Maintenance components (water level, filter changing)
 const unsigned int CHECK_WATER_LEVEL = 10000; // 10 seconds
 const unsigned int CHECK_FILTER = 10000; // 10 seconds
-const unsigned int DAY_NIGHT_CYCLE = 60000; // 1 minute
+unsigned int DAY_NIGHT_CYCLE = 60000; // 1 minute
 unsigned long lastWaterLevelCheck = 0;
 unsigned long lastFilterCheck = 0;
+unsigned long lastFilterChange = 0;
 unsigned long lastDayNightCheck = 0;
 unsigned long filterAge = 0;
 
@@ -471,18 +473,20 @@ void checkWaterLevel() {
 }
 
 void resetFilterAge() {
-  filterAge = 0;
+  unsigned long currentTime = millis();
+  lastFilterChange = currentTime;
 }
 
 void checkFilter() {
   unsigned long currentTime = millis();
   if ((currentTime - lastFilterCheck) >= CHECK_FILTER) {
+    filterAge = currentTime - lastFilterChange;
     sendMaintenanceMsg("ft", String(filterAge));
     lastFilterCheck = currentTime;
   }
 }
 
-// TODO: Going to replace this with setting day night cycle
+
 // Used for controller LED through UI
 void configLEDBrightness(String brightnessStr) {
   float brightness = brightnessStr.toFloat();
@@ -505,11 +509,14 @@ void configDayNightCycle(String dayNightStr) {
     if (arr[i].toFloat() < 0) return;
   }
   unsigned long currentTime = millis();
-  DAY_NIGHT_CYCLE = (unsigned int) arr[0];
-  unsigned int cycleStart = (unsigned int) arr[1];
+  DAY_NIGHT_CYCLE = ((unsigned int) arr[0].toInt()) * 1000;
+  unsigned int cycleStart = ((unsigned int) arr[1].toInt()) * 1000;
   lastDayNightCheck = currentTime - cycleStart;
-  day = (bool) arr[2];
-
+  day = (bool) arr[2].toInt();
+  Serial.println("SET DAY NIGHT CYCLE");
+  Serial.println(DAY_NIGHT_CYCLE);
+  Serial.println(cycleStart);
+  Serial.println(day);
 }
 
 void dayNightCycle(bool isDay) {
@@ -538,15 +545,14 @@ void checkDayNightCycle() {
 void checkMaintenance() {
   checkWaterLevel();
   checkFilter();
-  // checkDayNightCycle();
-  // dayNightCycle(day);
+  checkDayNightCycle();
+  dayNightCycle(day);
 }
 
 void setup() {
   // Serial to print
   Serial.begin(115200);
   // TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz - Pins 9 and 10
-
   setupSensorSuite();
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
@@ -565,15 +571,16 @@ void configThreshold(String msg) {
   String id = msg.substring(0, idDelim);
   String thresholdStr = msg.substring(idDelim + 1, msg.length());
 
-  unsigned int valDelim = thresholdStr.indexOf(',');
-  String minThreshStr = thresholdStr.substring(0, valDelim);
-  String maxThreshStr = thresholdStr.substring(valDelim + 1, thresholdStr.length());
-
-  // Message was corrupted - TODO: Do something here to indicate this to user
-  if (!stringIsFloat(minThreshStr) || !stringIsFloat(maxThreshStr)) return;
-
-  float minThresh = minThreshStr.toFloat();
-  float maxThresh = maxThreshStr.toFloat();
+  unsigned const size = 2;
+  String arr[size];
+  getValuesFromMsg(arr, thresholdStr);
+  for (int i = 0; i < size; i++) {
+    // Message was corrupted - TODO: Indicate this somehow?
+    if (!stringIsFloat(arr[i])) return;
+  }
+  
+  float minThresh = arr[0].toFloat();
+  float maxThresh = arr[1].toFloat();
 
   // Serial.println("Threshold Update for " + id);
   // Serial.println("MIN: " + String(minThresh) + " | MAX: " + String(maxThresh));
@@ -617,7 +624,6 @@ void processMessage(String msg) {
   }
 
   String msgContent = msg.substring(2, msg.length());
-  
   switch(msgType) {
     case 't': // Set threshold values
       configThreshold(msgContent);
@@ -639,7 +645,6 @@ String dataIn; // Used to build strings using the characters (c) read over seria
 
 // Main loop
 void loop() {
-  filterAge = millis();
   readSensorSuite();
   checkMaintenance();
   
@@ -652,7 +657,6 @@ void loop() {
   }
   // EOF is reached
   if (c == EOF) {
-    // Serial.println(dataIn);
     // Process the completed message
     processMessage(dataIn);
     // Reset variables
