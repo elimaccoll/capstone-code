@@ -1,5 +1,43 @@
-import { sendLEDBrightness } from "./send.js";
+import {
+  sendLEDBrightness,
+  sendFilterChanged,
+  sendDayNightCycle,
+} from "./send.js";
+import { resetFilterAge } from "./receive.js"; // For testing
+import { storeDayNightCycle } from "./store.js";
+import { loadDayNightCycle } from "./load.js";
 
+// Filter stuff
+$("#filter-btn").click(() => {
+  sendFilterChanged();
+  $("#maintenance-filter-age").text("0");
+  resetFilterAge(); // For testing
+});
+
+export const displayFilterQuality = (filterAgeStr) => {
+  const filterAge = Math.floor(parseInt(filterAgeStr) / 1000);
+  $("#maintenance-filter-age").text(filterAge);
+  let color;
+  if (filterAge < 60) color = "lightgreen"; // 1 minute
+  else if (filterAge < 120) color = "yellow"; // 2 minutes
+  else color = "lightcoral";
+  $("#maintenance-filter").css("backgroundColor", color);
+};
+
+// Water level stuff
+export const displayWaterLevelStatus = (waterLevelStr) => {
+  const waterLevel = parseInt(waterLevelStr);
+  let waterLevelMsg = "Good";
+  let color = "lightgreen";
+  if (waterLevel === 0) {
+    waterLevelMsg = "Low";
+    color = "lightcoral";
+  }
+  $("#maintenance-wl-indicator").text(waterLevelMsg);
+  $("#maintenance-water-level").css("backgroundColor", color);
+};
+
+// LED stuff
 // Event Listener for LED Brightness range input
 $("#led-control").change((event) => {
   // Get value from slider
@@ -10,18 +48,35 @@ $("#led-control").change((event) => {
   sendLEDBrightness(value);
 });
 
-export const displayFilterQuality = (filterAgeStr) => {
-  const filterAge = Math.floor(parseInt(filterAgeStr) / 1000);
-  $("#maintenance-filter-quality").text(filterAge);
-  let color;
-  if (filterAge < 60) color = "lightgreen"; // 1 minute
-  else if (filterAge < 120) color = "yellow"; // 2 minutes
-  else color = "red";
-  $("#maintenance-filter").css("backgroundColor", color);
+const displayDayNightCycle = (cycleLength) => {
+  $("#day-night-length-display").text(cycleLength);
 };
 
-export const displayWaterLevelStatus = (waterLevelStr) => {
-  const waterLevel = parseInt(waterLevelStr);
-  const waterLevelMsg = waterLevel === 1 ? "Good" : "Low";
-  $("#maintenance-wl-indicator").text(waterLevelMsg);
-};
+// Display current day night cycle length
+displayDayNightCycle(loadDayNightCycle());
+
+$("#day-night-btn").click(() => {
+  const minCycleLength = 60;
+  const minCycleStart = 0;
+  const cycleLengthStr = $("#day-night-length").val();
+  const cycleStartStr = $("#day-night-start").val();
+  let isDayStr = $("#day-night-day").val();
+  isDayStr = isDayStr === "Day" ? "1" : "0";
+  // Missing fields
+  if (!cycleLengthStr || !cycleStartStr) return;
+
+  const cycleLength = parseFloat(cycleLengthStr);
+  const cycleStart = parseFloat(cycleStartStr);
+
+  // Invalid input
+  if (
+    cycleLength < minCycleLength ||
+    cycleStart < minCycleStart ||
+    cycleStart >= cycleLength
+  )
+    return;
+
+  sendDayNightCycle(cycleLengthStr, cycleStartStr, isDayStr);
+  storeDayNightCycle(cycleLength);
+  displayDayNightCycle(cycleLength);
+});

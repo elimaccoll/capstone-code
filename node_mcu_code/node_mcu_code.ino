@@ -8,8 +8,11 @@
 // Library for File system (use HTML and CSS files)
 #include <FS.h>
 
+// TODO: Work on timing of loading scripts to improve page load
 // TODO: Work on timings to minimize corrupted messages
-// TODO: Single point of control for writing over serial connection
+// TODO: Responses - response->send() ?
+// TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
+//       - TEST MY FIX TO THIS | I just reset each value string to "" after sending to UI
 
 SoftwareSerial nodeSerial(D1, D2);
 
@@ -68,6 +71,11 @@ String getTDS() {
   return tds;
 }
 
+void sendSerial(String msg) {
+  nodeSerial.print(msg);
+  delay(100);
+}
+
 void setup() {
   Serial.begin(115200);
   
@@ -90,6 +98,8 @@ void setup() {
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
+
+  // TODO: Add delays between these?
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -128,11 +138,14 @@ void setup() {
   server.on("/info_panel_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/info_panel_component.js", "text/javascript");
   });
-  server.on("/status_bar.js", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/status_bar.js", "text/javascript");
+  server.on("/status_bar_component.js", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/status_bar_component.js", "text/javascript");
   });
   server.on("/dashboard.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/dashboard.js", "text/javascript");
+  });
+  server.on("/status_bar.js", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/status_bar.js", "text/javascript");
   });
   server.on("/info_panel.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/info_panel.js", "text/javascript");
@@ -164,45 +177,55 @@ void setup() {
   // Route to send internal air temperature reading
   server.on("/internal_air_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getInternalAirTemp().c_str());
+    intAirTemp = "";
   });
   // Route to send internal humidity reading
   server.on("/internal_humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getInternalHumidity().c_str());
+    intHumidity = "";
   });
   // Route to send external temperature reading
   server.on("/external_air_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getExternalAirTemp().c_str());
+    extAirTemp = "";
   });
   // Route to send external humidity reading
   server.on("/external_humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getExternalHumidity().c_str());
+    extHumidity = "";
   });
   // Route to send water temperature reading
   server.on("/water_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getWaterTemp().c_str());
+    waterTemp = "";
   });
   // Route to send soil temperature reading
   server.on("/soil_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getSoilTemp().c_str());
+    soilTemp = "";
   });
   // Route to send soil moisture reading
   server.on("/soil_moisture", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getSoilMoisture().c_str());
+    soilMoisture = "";
   });
   // Route to send tds reading
   server.on("/tds", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getTDS().c_str());
+    tds = "";
   });
 
   // Route to send maintenance notifications
   server.on("/water_level", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getWaterLevel().c_str());
+    waterLevel = "";
   });
   server.on("/filter_age", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getFilterAge().c_str());
+    filterAge = "";
   });
   
-  // Route to get threshold values from UI
+  // Route to get threshold values from UI and send to Arduino
   server.on("/threshold_control", HTTP_GET, [](AsyncWebServerRequest * request) {
     String type, minThresh, maxThresh, msg;
     // Can check for multiple specific parameters when dealing different controls on actuators being changed (min, max, etc.)
@@ -213,15 +236,14 @@ void setup() {
       maxThresh = request->getParam("max")->value();
       // Send to Arduino
       msg = "t:" + type + ":" + minThresh + "," + maxThresh + EOF;
-      nodeSerial.print(msg);
-      delay(100);
+      sendSerial(msg);
     }
     else {
       Serial.println("Missing parameter");
     }
   });
 
-  // Route to control LED from UI
+  // Route to control LED from UI and send to Arduino
   server.on("/led_control", HTTP_GET, [](AsyncWebServerRequest * request) {
     String brightness, msg;
     if (request->hasParam("brightness")) {
@@ -229,12 +251,36 @@ void setup() {
       brightness = request->getParam("brightness")->value();
       // Send to Arduino
       msg = "l:" + brightness + EOF;
-      nodeSerial.print(msg);
-      delay(100);
+      sendSerial(msg);
     }
     else {
       Serial.println("Missing parameter");
     }
+  });
+
+  // Route to set day/night cycle from UI and send to Arduino
+  server.on("/day_night_cycle", HTTP_GET, [](AsyncWebServerRequest * request) {
+    String cycleLength, cycleStart, isDay, msg;
+    if (request->hasParam("length") && request->hasParam("start") && request->hasParam("day")) {
+      // Parse Route URL for parameters
+      cycleLength = request->getParam("length")->value();
+      cycleStart = request->getParam("start")->value();
+      isDay = request->getParam("day")->value();
+      // Send to Arduino
+      msg = "d:" + cycleLength + "," + cycleStart + "," + isDay + EOF;
+      sendSerial(msg);
+    }
+    else {
+      Serial.println("Missing parameter(s)");
+    }
+  });
+
+  // Route to reset filter age in Arduino
+  server.on("/filter_changed", HTTP_GET, [](AsyncWebServerRequest * request) {
+    String msg;
+    // Send to Arduino
+    msg = "f" + EOF;
+    sendSerial(msg);
   });
 
   server.begin();

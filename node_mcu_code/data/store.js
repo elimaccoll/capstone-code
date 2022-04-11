@@ -1,10 +1,7 @@
-// TODO: Add filter age and water level to local storage (load and store)
-
 const DATA_BUFFER = 20; // Store a buffer of 20 data points for each plot
 
 // Clear local storage
-const clearBtn = document.getElementById("clear-data-btn");
-clearBtn.addEventListener("click", () => {
+$("#clear-data-btn").click(() => {
   window.onload = () => {
     localStorage.clear();
   };
@@ -22,6 +19,10 @@ const getIndexFromName = (chartArr, chartName) => {
     }
   }
   return -1;
+};
+
+export const storeDayNightCycle = (cycleLength) => {
+  localStorage.dayNightCycle = JSON.stringify(cycleLength);
 };
 
 export const storeThresholds = (chartName, minThresh, maxThresh) => {

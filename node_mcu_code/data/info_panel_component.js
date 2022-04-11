@@ -19,30 +19,69 @@ const InfoPanel = () => {
                 <div class="row text-center info-content" id="maintenance-content">
                     <div class="col-4">
                         <div>
-                            Water Level:
-                            <span id="maintenance-wl-indicator"></span>
+                            <div class="w-100 py-2 rounded-pill" id="maintenance-water-level">
+                                Water Level:
+                                <span id="maintenance-wl-indicator"></span>
+                            </div>
                         </div>
                         <div class="mt-2 d-flex justify-content-center">
                             <div class="w-100 py-2 rounded-pill" id="maintenance-filter">
-                                Filter Quality:
-                                <span id="maintenance-filter-quality"></span>
+                                Filter Age:
+                                <span id="maintenance-filter-age"></span>
                             </div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <label class="form-label" for="led-control">
-                            LED Brightness: 
-                            <span id="led-brightness">0</span>
-                        </label>
-                        <input type="range" class="form-range" value="0" min="0" max="100" id="led-control"/>
+                        <div>
+                            <label class="form-label" for="led-control">
+                                LED Brightness: 
+                                <span id="led-brightness">0</span>
+                            </label>
+                            <input type="range" class="form-range" value="0" min="0" max="100" id="led-control"/>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label" for="day-night-control">
+                                Day Night Cycle: 
+                                <span id="day-night-length-display"></span>
+                            </label>
+                            <div class="">
+                                <div class="input-group">
+                                    <label class="input-group-text">Cycle Length</label>
+                                    <input type="number" min="60" value="60" class="form-control" id="day-night-length" placeholder="Cycle Length"/>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-group-text">Start Time</label>
+                                    <input type="number" min="0" value="0" class="form-control" id="day-night-start" placeholder="Cycle Start"/>
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-group-text">Period</label>
+                                    <select class="form-select" id="day-night-day">
+                                        <option>Day</option>
+                                        <option>Night</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-success mt-1 w-100" id="day-night-btn">
+                                    Set
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-4">
-                        <button class="btn btn-info" id="testing-btn">
-                            Testing
+                        <div>
+                            <button class="btn btn-warning" id="testing-btn">
+                                Testing
+                            </button>
+                        </div>
+                        <div>
+                            <button class="btn btn-danger mt-3" id="clear-data-btn">
+                                Clear Data
+                            </button>
+                        </div>
+                        <div>
+                        <button class="btn btn-primary mt-3" id="filter-btn">
+                            Filter Changed
                         </button>
-                        <button class="btn btn-danger" id="clear-data-btn">
-                            Clear Data
-                        </button>
+                    </div>
                     </div>
                 </div>
                 <div class="d-none text-center info-content" id="help-content">

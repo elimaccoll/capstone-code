@@ -4,13 +4,10 @@
 #include <dht.h>
 
 // TODO: Figure out delay timing on setup
-// TODO: UI continues to plot previously plotted value if there is no new value by the next read interval
-// TODO: Need to send thresholds cleaner - get corrupted and misinterpretted a lot (add delay after send)
-// TODO: Make a generic Temperature class to subclass Water, soil and air
-// TODO: Add the ability to set day/night cycle duration
-// TODO: Add some indicator light when threshold message corrupt? new threshold not set
-// TODO: Test filter change button
-// TODO: Single point of control for writing over serial connection
+// TODO: Test out the impact of adding delay after sending thresholds
+// TODO: Add the ability to set day/night cycle duration - TEST
+// TODO: Add some indicator when threshold message corrupt? new threshold not set
+// TODO: Pull out function for parsing the message format - TEST and implement everywhere
 
 // TODO: Verify soil moisture
 
@@ -43,9 +40,6 @@ const int DEMO_LED_PIN = 8;
 
 const unsigned int DHT_PINS[2] = {DHT_INT1, DHT_INT2};
 const int NUM_DHT = 2;
-
-// Start off
-bool day = false;
 
 
 class Sensor {
@@ -330,6 +324,20 @@ class TDS : public Sensor {
         }
 };
 
+// Single point of control for writing over serial connection
+void sendSerial(String msg) {
+  arduinoSerial.print(msg);
+  delay(100);
+}
+
+bool stringIsFloat(String str) {
+  char c;
+  for (int i = 0; i < str.length(); i++) {
+    c = str[i];
+    if (!isDigit(c) && c != '.') return false;
+  }
+  return true;
+}
 
 /* ih - Internal humidity (inside enclosure)
  * eh - External humidity (outside enclosure)
@@ -347,8 +355,7 @@ void sendDataMsg(String id, float data) {
   String msg = "";
   msg = "d:" + id + ":" + String(data) + EOF;
 //  Serial.println("Sending data: " + msg);
-  arduinoSerial.print(msg);
-  delay(100);
+  sendSerial(msg);
 }
 
 // Config for setting up Sensor objects
@@ -415,6 +422,22 @@ void readSensorSuite() {
     }
 }
 
+// Populatearray with string values from string of comma separated values
+void getValuesFromMsg(String* arr, String msg) {
+  char valDelim = ',';
+  unsigned int s = 0;
+  unsigned int e = 0;
+  unsigned int ind = 0;
+  String valStr = "";
+  while (e != -1) {
+    e = msg.indexOf(valDelim, s);
+    valStr = msg.substring(s, e);
+    arr[ind] = valStr;
+    ind++;
+    s = e + 1;
+  }
+}
+
 /*
  * wl - Water level (Water level is low)
  * ft - Filter time (Need to change filter)
@@ -425,14 +448,13 @@ void sendMaintenanceMsg(String id, String maint_msg) {
   String msg = "";
   msg = "m:" + id + ":" + maint_msg + EOF;
 //  Serial.println("Sending maintenance: " + msg);
-  arduinoSerial.print(msg);
-  delay(100);
+  sendSerial(msg);
 }
 
 // Config for Maintenance components (water level, filter changing)
-const unsigned int CHECK_WATER_LEVEL = 1000; // 10 seconds
+const unsigned int CHECK_WATER_LEVEL = 10000; // 10 seconds
 const unsigned int CHECK_FILTER = 10000; // 10 seconds
-const unsigned int CHECK_DAY_NIGHT_CYCLE = 60000; // 1 minute
+const unsigned int DAY_NIGHT_CYCLE = 60000; // 1 minute
 unsigned long lastWaterLevelCheck = 0;
 unsigned long lastFilterCheck = 0;
 unsigned long lastDayNightCheck = 0;
@@ -460,33 +482,54 @@ void checkFilter() {
   }
 }
 
+// TODO: Going to replace this with setting day night cycle
 // Used for controller LED through UI
-void configLEDBrightness(String brightness_str) {
-  float brightness = brightness_str.toFloat();
-  float brightness_map = map(brightness, 0, 100, 55, 0);
-  if (brightness_map >= 50) brightness_map = 255;
-  analogWrite(LED_PIN, brightness_map);
-}
-
-void dayCycle() {
-  unsigned long currentTime = millis();
-  unsigned long brightness = (currentTime - lastDayNightCheck);
-  float brightnessMap = map(brightness, 0, CHECK_DAY_NIGHT_CYCLE, 55, 0);
+void configLEDBrightness(String brightnessStr) {
+  float brightness = brightnessStr.toFloat();
+  float brightnessMap = map(brightness, 0, 100, 55, 0);
   if (brightnessMap >= 50) brightnessMap = 255;
   analogWrite(LED_PIN, brightnessMap);
 }
 
-void nightCycle() {
+// Start off
+bool day = false;
+
+// TODO: Test this
+void configDayNightCycle(String dayNightStr) {
+  unsigned const size = 3;
+  String arr[size];
+  getValuesFromMsg(arr, dayNightStr);
+  for (int i = 0; i < size; i++) {
+    // Message was corrupted
+    if (!stringIsFloat(arr[i])) return;
+    if (arr[i].toFloat() < 0) return;
+  }
+  unsigned long currentTime = millis();
+  DAY_NIGHT_CYCLE = (unsigned int) arr[0];
+  unsigned int cycleStart = (unsigned int) arr[1];
+  lastDayNightCheck = currentTime - cycleStart;
+  day = (bool) arr[2];
+
+}
+
+void dayNightCycle(bool isDay) {
+  // Default range is for day
+  unsigned int minRange = 55;
+  unsigned int maxRange = 0;
+  if (!isDay) {
+    minRange = 0;
+    maxRange = 55;
+  }
   unsigned long currentTime = millis();
   unsigned long brightness = (currentTime - lastDayNightCheck);
-  float brightnessMap = map(brightness, 0, CHECK_DAY_NIGHT_CYCLE, 0, 55);
-  if (brightnessMap >= 50) brightnessMap = 255;
+  float brightnessMap = map(brightness, 0, DAY_NIGHT_CYCLE, minRange, maxRange);
+  if (brightnessMap >= 50) brightnessMap = 255; // Turn fully off
   analogWrite(LED_PIN, brightnessMap);
 }
 
 void checkDayNightCycle() {
   unsigned long currentTime = millis();
-  if ((currentTime - lastDayNightCheck) >= CHECK_DAY_NIGHT_CYCLE) {
+  if ((currentTime - lastDayNightCheck) >= DAY_NIGHT_CYCLE) {
     day = !day;
     lastDayNightCheck = currentTime;
   }
@@ -495,9 +538,8 @@ void checkDayNightCycle() {
 void checkMaintenance() {
   checkWaterLevel();
   checkFilter();
-//  checkDayNightCycle();
-//  if (day) dayCycle();
-//  else nightCycle();
+  // checkDayNightCycle();
+  // dayNightCycle(day);
 }
 
 void setup() {
@@ -518,16 +560,6 @@ void setup() {
   delay(1000);
 }
 
-
-bool stringIsFloat(String str) {
-  char c;
-  for (int i = 0; i < str.length(); i++) {
-    c = str[i];
-    if (!isDigit(c) && c != '.') return false;
-  }
-  return true;
-}
-
 void configThreshold(String msg) {
   unsigned int idDelim = msg.indexOf(':');
   String id = msg.substring(0, idDelim);
@@ -537,7 +569,7 @@ void configThreshold(String msg) {
   String minThreshStr = thresholdStr.substring(0, valDelim);
   String maxThreshStr = thresholdStr.substring(valDelim + 1, thresholdStr.length());
 
-  // Message was corrupted
+  // Message was corrupted - TODO: Do something here to indicate this to user
   if (!stringIsFloat(minThreshStr) || !stringIsFloat(maxThreshStr)) return;
 
   float minThresh = minThreshStr.toFloat();
@@ -571,24 +603,30 @@ void configThreshold(String msg) {
 
 
 void processMessage(String msg) {
-  /* Parse the message type received from NodeMCU
+  /* Determine the message type received from NodeMCU
    *  t - Threshold change
    *  f - Filter changed
    *  l - Lights
    *  E.g. msg = "l:64\n", msg = "t:sm:30,40\n"
    */ 
   char msgType = msg.charAt(0);
+  // Don't need message content
+  if (msgType == 'f') {
+    resetFilterAge();
+    return;
+  }
+
   String msgContent = msg.substring(2, msg.length());
   
   switch(msgType) {
-    case 't':
+    case 't': // Set threshold values
       configThreshold(msgContent);
       break;
-    case 'f':
-      resetFilterAge();
-      break;
-    case 'l':
+    case 'l': // Manual control LED
       configLEDBrightness(msgContent);
+      break;
+    case 'd': // Set day night cycle
+      configDayNightCycle(msgContent);
       break;
     default:
       Serial.println("Unrecognized Message type");

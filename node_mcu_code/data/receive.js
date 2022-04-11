@@ -5,7 +5,7 @@ import {
 } from "./maintenance.js";
 import charts from "./charts_to_render.js";
 
-let active = true;
+let active = false;
 
 const MAINTENANCE_INTERVAL = 10;
 if (active) {
@@ -59,6 +59,13 @@ if (active) {
 }
 
 // Event listener for "TESTING" button to generate fake data
+
+let filterAge = 0;
+
+export const resetFilterAge = () => {
+  filterAge = 0;
+};
+
 $("#testing-btn").click(() => {
   generateTestData();
 });
@@ -80,7 +87,6 @@ const generateTestData = () => {
     let waterLevel = Math.floor(Math.random() * 2);
     displayWaterLevelStatus(waterLevel);
   }, 1000);
-  let filterAge = 0;
   setInterval(() => {
     filterAge += 1000;
     displayFilterAge(filterAge);
