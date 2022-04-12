@@ -61,7 +61,6 @@ $("#day-night-btn").click(() => {
   const cycleLengthStr = $("#day-night-length").val();
   const cycleStartStr = $("#day-night-start").val();
   let isDayStr = $("#day-night-day").val();
-  isDayStr = isDayStr === "Day" ? "1" : "0";
   // Missing fields
   if (!cycleLengthStr || !cycleStartStr) return;
 

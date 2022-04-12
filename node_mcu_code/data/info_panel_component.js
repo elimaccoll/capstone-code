@@ -81,10 +81,10 @@ const InfoPanel = () => {
                         </div>
                         <div>
                             <div class="input-group">
-                                <label class="input-group-text">Period</label>
+                                <label class="input-group-text">From</label>
                                 <select class="form-select" id="day-night-day">
-                                    <option>Day</option>
-                                    <option>Night</option>
+                                    <option value="1">Midnight</option>
+                                    <option value="0">Noon</option>
                                 </select>
                             </div>
                         </div>
