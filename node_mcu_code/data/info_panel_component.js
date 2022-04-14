@@ -21,9 +21,9 @@ const InfoPanel = () => {
                     <div class="nav-link info-tab" id="testing-tab">Testing</div>
                 </li>
             </ul>
-            <div class="info-panel-content mt-2">
-                <div class="row mt-5 text-center info-content" id="maintenance-content">
-                    <div class="col-6">
+            <div class="info-panel-content mt-2 overflow-auto">
+                <div class="row text-center info-content" id="maintenance-content">
+                    <div class="col-5">
                         <div>
                             <div class="w-100 py-2 rounded-pill" id="maintenance-water-level">
                                 Water Level:
@@ -31,7 +31,7 @@ const InfoPanel = () => {
                             </div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-5">
                         <div>
                             <div class="w-100 py-2 rounded-pill" id="maintenance-filter">
                                 Filter Age:
@@ -44,7 +44,7 @@ const InfoPanel = () => {
                             </button>
                         </div>
                     </div>
-                    <div class="col-12 mt-5">
+                    <div class="col-2 mt-5">
                         <button class="btn btn-danger" id="clear-data-btn">
                             Clear Data
                         </button>
@@ -92,17 +92,19 @@ const InfoPanel = () => {
                     Idk if we even need this tab - maybe just description of the project
                 </div>
                 <div class="d-none text-center info-content" id="testing-content">
-                    <div>
-                        <button class="btn btn-warning" id="testing-btn">
-                            Testing
-                        </button>
-                    </div>
-                    <div class="mt-5">
-                        <label class="form-label" for="led-control">
-                            LED Brightness: 
-                            <span id="led-brightness">0</span>
-                        </label>
-                        <input type="range" class="form-range" value="0" min="0" max="100" id="led-control"/>
+                    <div class="row">
+                        <div class="mt-5 col-10">
+                            <label class="form-label" for="led-control">
+                                LED Brightness: 
+                                <span id="led-brightness">0</span>
+                            </label>
+                            <input type="range" class="form-range" value="0" min="0" max="100" id="led-control"/>
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-warning" id="testing-btn">
+                                Testing
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
