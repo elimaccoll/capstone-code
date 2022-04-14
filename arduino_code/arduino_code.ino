@@ -3,13 +3,20 @@
 #include <SoftwareSerial.h>
 #include <dht.h>
 
+// TODO: Random
+// LED resets everytime I open the serial monitor
+// Don't forget to change PWM frequency on LED pin
+
 // TOOD: Implement
 // Figure out delay timing on setup
 // Message queueing to avoid corruptions
 // Add some indicator when threshold message corrupt? new threshold not set
+// bool receiving that is true while arduino is receiving data from nodemcu - don't send while receiving
+// Add a buffer of brightness values where the LED is on full power (similar to what we did for being off)
+//    - Add more of a buffer for time off as well (maybe)
+// Rename `day` variable to something better - indicates whether led is getting brighter or dimmer
 
 // TODO: Testing
-// Day/Night cycle with actual LED
 // Soil moisture conversion
 
 float recentAirTemp;
@@ -25,8 +32,8 @@ SoftwareSerial arduinoSerial(RX_PIN, TX_PIN);
 //TODO: Remove - used for demo
 const int DEMO_LED_PIN = 8;
 
-#define MISTER_PIN 4
-#define LED_PIN 100
+#define MISTER_PIN 2
+#define LED_PIN 10
 
 // Sensor Pins
 #define TDS_PIN A1
@@ -355,7 +362,7 @@ bool stringIsFloat(String str) {
 void sendDataMsg(String id, float data) {
   String msg = "";
   msg = "d:" + id + ":" + String(data) + EOF;
-  Serial.println("Sending data: " + msg);
+//  Serial.println("Sending data: " + msg);
   sendSerial(msg);
 }
 
@@ -398,7 +405,7 @@ SoilMoisture *sm = new SoilMoisture("sm", READ_SOIL_MOISTURE, SOIL_MOISTURE_MIN,
 WaterTemperatureOW *wt = new WaterTemperatureOW("wt", READ_WATER_TEMP, WATER_TEMP_MIN, WATER_TEMP_MAX);
 TDS *td = new TDS("td", READ_TDS, TDS_MIN, TDS_MAX);
 
-Sensor* ss[] = {it, ih, et, eh, sm, td, wt};
+Sensor* ss[] = {}; // {it, ih, et, eh, sm, td, wt};
 const int NUM_SENSORS = sizeof(ss)/sizeof(ss[0]);
 
 // Sensor Suite Operations
@@ -448,14 +455,14 @@ void getValuesFromMsg(String* arr, String msg) {
 void sendMaintenanceMsg(String id, String maint_msg) {
   String msg = "";
   msg = "m:" + id + ":" + maint_msg + EOF;
-  Serial.println("Sending maintenance: " + msg);
+//  Serial.println("Sending maintenance: " + msg);
   sendSerial(msg);
 }
 
 // Config for Maintenance components (water level, filter changing)
 const unsigned int CHECK_WATER_LEVEL = 10000; // 10 seconds
 const unsigned int CHECK_FILTER = 10000; // 10 seconds
-unsigned int DAY_NIGHT_CYCLE = 60000; // 1 minute
+unsigned long DAY_NIGHT_CYCLE = 60000; // 1 minute
 unsigned long lastWaterLevelCheck = 0;
 unsigned long lastFilterCheck = 0;
 unsigned long lastFilterChange = 0;
@@ -492,6 +499,8 @@ void configLEDBrightness(String brightnessStr) {
   float brightness = brightnessStr.toFloat();
   float brightnessMap = map(brightness, 0, 100, 55, 0);
   if (brightnessMap >= 50) brightnessMap = 255;
+  // Serial.println("CONFIG BRIGHTNESS");
+  // Serial.println(brightnessMap);
   analogWrite(LED_PIN, brightnessMap);
 }
 
@@ -500,6 +509,7 @@ bool day = false;
 
 // TODO: Test this
 void configDayNightCycle(String dayNightStr) {
+  Serial.println(dayNightStr);
   unsigned const size = 3;
   String arr[size];
   getValuesFromMsg(arr, dayNightStr);
@@ -509,8 +519,8 @@ void configDayNightCycle(String dayNightStr) {
     if (arr[i].toFloat() < 0) return;
   }
   unsigned long currentTime = millis();
-  DAY_NIGHT_CYCLE = ((unsigned int) arr[0].toInt()) * 1000;
-  unsigned int cycleStart = ((unsigned int) arr[1].toInt()) * 1000;
+  DAY_NIGHT_CYCLE = arr[0].toInt() * 1000;
+  unsigned long cycleStart = arr[1].toInt() * 1000;
   lastDayNightCheck = currentTime - cycleStart;
   day = (bool) arr[2].toInt();
   Serial.println("SET DAY NIGHT CYCLE");
@@ -532,6 +542,7 @@ void dayNightCycle(bool isDay) {
   float brightnessMap = map(brightness, 0, DAY_NIGHT_CYCLE, minRange, maxRange);
   if (brightnessMap >= 50) brightnessMap = 255; // Turn fully off
   analogWrite(LED_PIN, brightnessMap);
+  // Serial.println(brightnessMap);
 }
 
 void checkDayNightCycle() {
@@ -552,7 +563,7 @@ void checkMaintenance() {
 void setup() {
   // Serial to print
   Serial.begin(115200);
-  // TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz - Pins 9 and 10
+  TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz - Pins 9 and 10
   setupSensorSuite();
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
@@ -582,8 +593,8 @@ void configThreshold(String msg) {
   float minThresh = arr[0].toFloat();
   float maxThresh = arr[1].toFloat();
 
-  // Serial.println("Threshold Update for " + id);
-  // Serial.println("MIN: " + String(minThresh) + " | MAX: " + String(maxThresh));
+//  Serial.println("Threshold Update for " + id);
+//  Serial.println("MIN: " + String(minThresh) + " | MAX: " + String(maxThresh));
   
   if (id == "it") {
     it->setThresholds(minThresh, maxThresh);
