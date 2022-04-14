@@ -17,48 +17,37 @@ const InfoPanel = () => {
                 <li class="nav-item">
                     <div class="nav-link info-tab" id="about-tab">About</div>
                 </li>
+                <li class="nav-item">
+                    <div class="nav-link info-tab" id="testing-tab">Testing</div>
+                </li>
             </ul>
             <div class="info-panel-content mt-2">
-                <div class="row text-center info-content" id="maintenance-content">
-                    <div class="col-4">
+                <div class="row mt-5 text-center info-content" id="maintenance-content">
+                    <div class="col-6">
                         <div>
                             <div class="w-100 py-2 rounded-pill" id="maintenance-water-level">
                                 Water Level:
                                 <span id="maintenance-wl-indicator"></span>
                             </div>
                         </div>
-                        <div class="mt-2 d-flex justify-content-center">
+                    </div>
+                    <div class="col-6">
+                        <div>
                             <div class="w-100 py-2 rounded-pill" id="maintenance-filter">
                                 Filter Age:
                                 <span id="maintenance-filter-age"></span>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-4">
-                        <div>
-                            <label class="form-label" for="led-control">
-                                LED Brightness: 
-                                <span id="led-brightness">0</span>
-                            </label>
-                            <input type="range" class="form-range" value="0" min="0" max="100" id="led-control"/>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div>
-                            <button class="btn btn-warning" id="testing-btn">
-                                Testing
+                        <div class="mt-3">
+                            <button class="btn btn-primary" id="filter-btn">
+                                Filter Changed
                             </button>
                         </div>
-                        <div>
-                            <button class="btn btn-danger" id="clear-data-btn">
-                                Clear Data
-                            </button>
-                        </div>
-                        <div>
-                        <button class="btn btn-primary" id="filter-btn">
-                            Filter Changed
+                    </div>
+                    <div class="col-12 mt-5">
+                        <button class="btn btn-danger" id="clear-data-btn">
+                            Clear Data
                         </button>
-                    </div>
                     </div>
                 </div>
                 <div class="d-none text-center info-content" id="day-night-content">
@@ -101,6 +90,20 @@ const InfoPanel = () => {
                 </div>
                 <div class="d-none text-center info-content" id="about-content">
                     Idk if we even need this tab - maybe just description of the project
+                </div>
+                <div class="d-none text-center info-content" id="testing-content">
+                    <div>
+                        <button class="btn btn-warning" id="testing-btn">
+                            Testing
+                        </button>
+                    </div>
+                    <div class="mt-5">
+                        <label class="form-label" for="led-control">
+                            LED Brightness: 
+                            <span id="led-brightness">0</span>
+                        </label>
+                        <input type="range" class="form-range" value="0" min="0" max="100" id="led-control"/>
+                    </div>
                 </div>
             </div>
         </div>

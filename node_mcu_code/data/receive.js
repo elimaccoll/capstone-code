@@ -66,6 +66,10 @@ export const resetFilterAge = () => {
   filterAge = 0;
 };
 
+const randomRange = (min, max) => {
+  return Math.random() * (max - min) + min;
+};
+
 $("#testing-btn").click(() => {
   generateTestData();
 });
@@ -77,14 +81,16 @@ const generateTestData = () => {
     const INTERVALS = READ.intervals;
     for (let i = 0; i < ROUTES.length; i++) {
       setInterval(() => {
-        let value = Math.random() * CONFIG.maxBound;
+        // let value = Math.random() * CONFIG.maxBound; // Random values within chart bounds
+        let value = randomRange(CONFIG.minThreshold, CONFIG.maxThreshold); // Random values within threshold
         addPlotPoint(chart.name, value, i);
       }, INTERVALS[i] * 1000);
     }
   });
   // Testing Maintenance
   setInterval(() => {
-    let waterLevel = Math.floor(Math.random() * 2);
+    // let waterLevel = Math.floor(Math.random() * 2);
+    let waterLevel = 0; // Water level low
     displayWaterLevelStatus(waterLevel);
   }, 1000);
   setInterval(() => {
