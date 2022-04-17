@@ -25,6 +25,14 @@ const char* password = "123456789";
 // Create Async Web Server
 AsyncWebServer server(80);
 
+// If I want to have multiple recent messages stored
+const unsigned int BUFFER_SIZE = 5;
+String msgBuffer[BUFFER_SIZE];
+unsigned int bufferInd = 0;
+// For now just test with one
+String recentMsg;
+
+
 String intAirTemp;
 String intHumidity;
 String extAirTemp;
@@ -68,6 +76,22 @@ String getSoilMoisture() {
 }
 String getTDS() {
   return tds;
+}
+
+void bufferMsg(String msg) {
+//  msgBuffer[bufferInd] = msg;
+//  bufferInd = (bufferInd + 1) % BUFFER_SIZE;
+  recentMsg = msg;
+}
+
+int calculateChecksum(String msg) {
+  unsigned int sum = 0;
+  char c;
+  for (int i = 0; i < msg.length(); i++) {
+    c = msg[i];
+    sum += (int) c;
+  }
+  return sum;
 }
 
 void sendSerial(String msg) {
@@ -226,7 +250,7 @@ void setup() {
   
   // Route to get threshold values from UI and send to Arduino
   server.on("/threshold_control", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String type, minThresh, maxThresh, msg;
+    String type, minThresh, maxThresh, msg, msgContent;
     // Can check for multiple specific parameters when dealing different controls on actuators being changed (min, max, etc.)
     if (request->hasParam("type") && request->hasParam("min") && request->hasParam("max")) {
       // Parse Route URL for parameters
@@ -234,8 +258,12 @@ void setup() {
       minThresh = request->getParam("min")->value();
       maxThresh = request->getParam("max")->value();
       // Send to Arduino
-      msg = "t:" + type + ":" + minThresh + "," + maxThresh + EOF;
+      msgContent = "t:" + type + ":" + minThresh + "," + maxThresh;
+//      int checksum = calculateChecksum(msgContent);
+//      msg = String(checksum) + "&" + msgContent + EOF;
+      msg = msgContent + EOF;
       sendSerial(msg);
+      bufferMsg(msg);
     }
     else {
       Serial.println("Missing parameter");
@@ -244,13 +272,17 @@ void setup() {
 
   // Route to control LED from UI and send to Arduino
   server.on("/led_control", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String brightness, msg;
+    String brightness, msg, msgContent;
     if (request->hasParam("brightness")) {
       // Parse Route URL for parameters
       brightness = request->getParam("brightness")->value();
       // Send to Arduino
-      msg = "l:" + brightness + EOF;
+      msgContent = "l:" + brightness;
+//      int checksum = calculateChecksum(msgContent);
+//      msg = String(checksum) + "&" + msgContent + EOF;
+      msg = msgContent + EOF;
       sendSerial(msg);
+      bufferMsg(msg);
     }
     else {
       Serial.println("Missing parameter");
@@ -259,15 +291,20 @@ void setup() {
 
   // Route to set day/night cycle from UI and send to Arduino
   server.on("/day_night_cycle", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String cycleLength, cycleStart, isDay, msg;
+    String cycleLength, cycleStart, isDay, msg, msgContent;
     if (request->hasParam("length") && request->hasParam("start") && request->hasParam("day")) {
       // Parse Route URL for parameters
       cycleLength = request->getParam("length")->value();
       cycleStart = request->getParam("start")->value();
       isDay = request->getParam("day")->value();
       // Send to Arduino
-      msg = "d:" + cycleLength + "," + cycleStart + "," + isDay + EOF;
+      // Using checksum:
+       msgContent = "d:" + cycleLength + "," + cycleStart + "," + isDay;
+      // int checksum = calculateChecksum(msgContent);
+      // msg = String(checksum) + "&" + msgContent + EOF;
+      msg = msgContent + EOF;
       sendSerial(msg);
+      bufferMsg(msg);
     }
     else {
       Serial.println("Missing parameter(s)");
@@ -296,6 +333,7 @@ void parseData(String msg) {
   unsigned int idDelim = msg.indexOf(':');
   String id = msg.substring(0, idDelim);
   String value = msg.substring(idDelim + 1, msg.length());
+  Serial.println(msg);
   if (id == "ih") {
     intHumidity = value;
   }
@@ -345,6 +383,9 @@ void processMessage(String msg) {
   char msgType = msg.charAt(0);
   String msgContent = msg.substring(2, msg.length());
   switch(msgType) {
+    case 'r': // retransmit
+      sendSerial(recentMsg);
+      break;
     case 'd':
       parseData(msgContent);
       break;

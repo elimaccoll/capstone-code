@@ -29,25 +29,31 @@ SoftwareSerial arduinoSerial(RX_PIN, TX_PIN);
 #define VREF 5.0 // analog reference voltage of the ADC
 
 // Control Pins
-//TODO: Remove - used for demo
-const int DEMO_LED_PIN = 8;
+#define MISTER_PIN 100 // find real pin
 
-#define MISTER_PIN 2
-#define LED_PIN 10
+#define LED_PIN 9
 
 // Sensor Pins
-#define TDS_PIN A1
-#define SOIL_MOISTURE_PIN A15
-#define LIQUID_LEVEL_PIN 52
-#define AIR_TEMP_BUS_PIN 3
-#define WATER_TEMP_BUS_PIN 9
-#define SOIL_TEMP_BUS_PIN 21 // not real
-#define DHT_INT1 6 // Bottom
-#define DHT_INT2 7 // Top
-#define DHT_EXT 8
+#define TDS_PIN A0
 
-const unsigned int DHT_PINS[2] = {DHT_INT1, DHT_INT2};
+#define SOIL_MOISTURE_PIN A1
+
+#define LIQUID_LEVEL_PIN 22
+
+#define INT_AIR_TEMP_PIN_TOP 7
+#define INT_AIR_TEMP_PIN_BOT 5
+const int NUM_AIR_TEMP = 2;
+
+#define EXT_AIR_TEMP_PIN 6
+
+#define WATER_TEMP_PIN 8
+#define SOIL_TEMP_BUS_PIN 101 // get real pin
+
+#define DHT_INT_BOT 2 // Bottom
+#define DHT_INT_TOP 4 // Top
+#define DHT_EXT 3 // External
 const int NUM_DHT = 2;
+const unsigned int DHT_PINS[NUM_DHT] = {DHT_INT_BOT, DHT_INT_TOP};
 
 
 class Sensor {
@@ -122,17 +128,49 @@ class TemperatureOW : public Sensor {
       }
 };
 
-class AirTemperatureOW : public TemperatureOW {
+class ExternalAirTemperature : public TemperatureOW {
     private:
-      unsigned int PIN = AIR_TEMP_BUS_PIN;
+      unsigned int PIN = EXT_AIR_TEMP_PIN;
     public:
-      AirTemperatureOW(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+      ExternalAirTemperature(String id, unsigned int readInterval, float minThresh, float maxThresh) 
           : TemperatureOW (id, readInterval, minThresh, maxThresh, PIN) {}
       float readSensor() override {
         float avgTempC = readTemp();
-        recentAirTemp = avgTempC;
         control();
         // Serial.println(avgTempC);
+        return avgTempC;
+      }
+};
+
+class AirTemperature : public TemperatureOW {
+    private:
+      unsigned int PIN = 0; // doesn't matter
+      OneWire oneWire1;
+      DallasTemperature oneWireSensor1;
+      OneWire oneWire2;
+      DallasTemperature oneWireSensor2;
+    public:
+      AirTemperature(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+          : TemperatureOW (id, readInterval, minThresh, maxThresh, PIN) {}
+      void setupSensor() override {
+        oneWire1 = OneWire(INT_AIR_TEMP_PIN_TOP);
+        oneWire2 = OneWire(INT_AIR_TEMP_PIN_BOT);
+        oneWireSensor1.setOneWire(&oneWire1);
+        oneWireSensor2.setOneWire(&oneWire2);
+        oneWireSensor1.begin();
+        oneWireSensor2.begin();
+      }
+      float readSensor() override {
+        oneWireSensor1.requestTemperatures();
+        oneWireSensor2.requestTemperatures();
+        
+        float avgTempC = 0;
+        avgTempC += (float) oneWireSensor1.getTempCByIndex(0);
+        avgTempC += (float) oneWireSensor2.getTempCByIndex(0);
+        avgTempC /= NUM_AIR_TEMP;
+        
+        setRecentValue(avgTempC);
+        recentAirTemp = avgTempC; // used by TDS
         return avgTempC;
       }
       void control() override {
@@ -146,11 +184,11 @@ class AirTemperatureOW : public TemperatureOW {
       }
 };
 
-class WaterTemperatureOW : public TemperatureOW {
+class WaterTemperature : public TemperatureOW {
     private:
-      unsigned int PIN = WATER_TEMP_BUS_PIN;
+      unsigned int PIN = WATER_TEMP_PIN;
     public:
-      WaterTemperatureOW(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+      WaterTemperature(String id, unsigned int readInterval, float minThresh, float maxThresh) 
           : TemperatureOW (id, readInterval, minThresh, maxThresh, PIN) {}
       float readSensor() override {
         float avgTempC = readTemp();
@@ -168,11 +206,11 @@ class WaterTemperatureOW : public TemperatureOW {
       }
 };
 
-class SoilTemperatureOW : public TemperatureOW {
+class SoilTemperature : public TemperatureOW {
     private:
       unsigned int PIN = SOIL_TEMP_BUS_PIN;
     public:
-      SoilTemperatureOW(String id, unsigned int readInterval, float minThresh, float maxThresh) 
+      SoilTemperature(String id, unsigned int readInterval, float minThresh, float maxThresh) 
           : TemperatureOW (id, readInterval, minThresh, maxThresh, PIN) {}
       float readSensor() override {
         float avgTempC = readTemp();
@@ -190,6 +228,8 @@ class SoilTemperatureOW : public TemperatureOW {
       }
 };
 
+// For reading air temp with DHT
+// TODO: Remove if unused
 class AirTemperatureDHT : public Sensor {
     private:
       dht DHT;
@@ -257,17 +297,14 @@ class Humidity : public Sensor {
         void control() override {
           if (checkControl() == 0) {
 //            digitalWrite(MISTER_PIN, LOW);
-//            digitalWrite(DEMO_LED_PIN, LOW);
           }
           else if (checkControl() == -1) {
             // Below threshold average
 //            digitalWrite(MISTER_PIN, HIGH);
-//            digitalWrite(DEMO_LED_PIN, HIGH);
           }
           else {
             // Above threshold average
 //            digitalWrite(MISTER_PIN, LOW);
-//            digitalWrite(DEMO_LED_PIN, LOW);
           }
         }
 };
@@ -309,6 +346,7 @@ class TDS : public Sensor {
           pinMode(TDS_PIN, INPUT);
         }
         float readSensor() override {
+          Serial.println("READING TDS"); // TODO: Why does reading only work when println is here
           float analogTDS = analogRead(TDS_PIN);
           float voltage = analogTDS * (float)VREF / 1024.0; // convert to voltage value
           float currTemp = recentAirTemp;
@@ -399,13 +437,13 @@ float TDS_MIN = 0;
 
 Humidity *ih = new Humidity("ih", READ_INTERNAL_HUMIDITY, HUMIDITY_MIN, HUMIDITY_MAX);
 ExternalHumidity *eh = new ExternalHumidity("eh", READ_EXTERNAL_HUMIDITY, HUMIDITY_MIN, HUMIDITY_MAX); // min and max dont matter
-AirTemperatureOW *it = new AirTemperatureOW("it", READ_INTERNAL_AIR_TEMP, AIR_TEMP_MIN, AIR_TEMP_MAX);
-AirTemperatureDHT *et = new AirTemperatureDHT("et", READ_EXTERNAL_AIR_TEMP, AIR_TEMP_MIN, AIR_TEMP_MAX); // min and max dont matter
+AirTemperature *it = new AirTemperature("it", READ_INTERNAL_AIR_TEMP, AIR_TEMP_MIN, AIR_TEMP_MAX);
+ExternalAirTemperature *et = new ExternalAirTemperature("et", READ_EXTERNAL_AIR_TEMP, AIR_TEMP_MIN, AIR_TEMP_MAX);
 SoilMoisture *sm = new SoilMoisture("sm", READ_SOIL_MOISTURE, SOIL_MOISTURE_MIN, SOIL_MOISTURE_MAX);
-WaterTemperatureOW *wt = new WaterTemperatureOW("wt", READ_WATER_TEMP, WATER_TEMP_MIN, WATER_TEMP_MAX);
+WaterTemperature *wt = new WaterTemperature("wt", READ_WATER_TEMP, WATER_TEMP_MIN, WATER_TEMP_MAX);
 TDS *td = new TDS("td", READ_TDS, TDS_MIN, TDS_MAX);
 
-Sensor* ss[] = {}; // {it, ih, et, eh, sm, td, wt};
+Sensor* ss[] = {ih, eh, it, et, td, sm, wt};
 const int NUM_SENSORS = sizeof(ss)/sizeof(ss[0]);
 
 // Sensor Suite Operations
@@ -567,13 +605,12 @@ void setup() {
   setupSensorSuite();
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
-  pinMode(DEMO_LED_PIN, OUTPUT);
   pinMode(MISTER_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
 
   // Start serial connection to NodeMCU
   arduinoSerial.begin(57600);
-
+  // Serial.println("Starting");
   delay(1000);
 }
 
@@ -593,8 +630,8 @@ void configThreshold(String msg) {
   float minThresh = arr[0].toFloat();
   float maxThresh = arr[1].toFloat();
 
-//  Serial.println("Threshold Update for " + id);
-//  Serial.println("MIN: " + String(minThresh) + " | MAX: " + String(maxThresh));
+  Serial.println("Threshold Update for " + id);
+  Serial.println("MIN: " + String(minThresh) + " | MAX: " + String(maxThresh));
   
   if (id == "it") {
     it->setThresholds(minThresh, maxThresh);
@@ -619,6 +656,37 @@ void configThreshold(String msg) {
   }
 }
 
+int calculateChecksum(String msg) {
+  unsigned int sum = 0;
+  char c;
+  for (int i = 0; i < msg.length(); i++) {
+    c = msg[i];
+    sum += (int) c;
+  }
+  return sum;
+}
+
+// "<checksum>&<message>"
+int getChecksumFromMsg(String msg) {
+  char checksumDelim = '&';
+  unsigned int e = msg.indexOf(checksumDelim);
+  return (msg.substring(0, e)).toInt();
+}
+
+bool validChecksum(String msg) {
+  char checksumDelim = '&';
+  // Received checksum
+  int recChecksum = getChecksumFromMsg(msg);
+  // Calculate checksum to compare
+  unsigned int s = msg.indexOf(checksumDelim) + 1;
+  String msgContent = msg.substring(s, msg.length());
+  int calcChecksum = calculateChecksum(msgContent);
+  Serial.println(recChecksum);
+  Serial.println(calcChecksum);
+  return recChecksum == calcChecksum;
+}
+
+
 
 void processMessage(String msg) {
   /* Determine the message type received from NodeMCU
@@ -627,6 +695,20 @@ void processMessage(String msg) {
    *  l - Lights
    *  E.g. msg = "l:64\n", msg = "t:sm:30,40\n"
    */ 
+
+  // Serial.println(msg);
+  // Compare checksum
+//  if (!validChecksum(msg)) {
+//    // Request retransmit
+//    msg = "r" + EOF;
+//    sendSerial(msg);
+//    return;
+//  }
+//  char contentDelim = '&';
+//  unsigned int contentStart = msg.indexOf(contentDelim) + 1;
+//  msg = msg.substring(contentStart, msg.length());
+
+  
   char msgType = msg.charAt(0);
   // Don't need message content
   if (msgType == 'f') {
@@ -646,7 +728,7 @@ void processMessage(String msg) {
       configDayNightCycle(msgContent);
       break;
     default:
-      Serial.println("Unrecognized Message type");
+      Serial.println("Process Message: Unrecognized Message type");
       break;
   }
 }
