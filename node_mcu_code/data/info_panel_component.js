@@ -52,20 +52,20 @@ const InfoPanel = () => {
                 </div>
                 <div class="d-none text-center info-content" id="day-night-content">
                     <label class="form-label" for="day-night-control">
-                        Day Night Cycle: 
-                        <span id="day-night-length-display"></span>
+                        Day/Night Cycle: 
+                        <span><span id="day-night-length-display"></span> mins</span>
                     </label>
                     <div class="d-flex justify-content-center align-items-center flex-wrap">
                         <div>
                             <div class="input-group">
                                 <label class="input-group-text">Cycle Length</label>
-                                <input type="number" min="60" value="60" class="form-control" id="day-night-length" placeholder="Cycle Length"/>
+                                <input type="number" min="1" value="2" class="form-control" id="day-night-length" placeholder="Cycle Length" title="Length of day/night period in minutes"/>
                             </div>
                         </div>
                         <div>
                             <div class="input-group">
                                 <label class="input-group-text">Start Time</label>
-                                <input type="number" min="0" value="0" class="form-control" id="day-night-start" placeholder="Cycle Start"/>
+                                <input type="number" min="0" value="0" class="form-control" id="day-night-start" placeholder="Cycle Start" title="Start time into cycle in minutes"/>
                             </div>
                         </div>
                         <div>

@@ -56,7 +56,7 @@ const displayDayNightCycle = (cycleLength) => {
 displayDayNightCycle(loadDayNightCycle());
 
 $("#day-night-btn").click(() => {
-  const minCycleLength = 60;
+  const minCycleLength = 1;
   const minCycleStart = 0;
   const cycleLengthStr = $("#day-night-length").val();
   const cycleStartStr = $("#day-night-start").val();
