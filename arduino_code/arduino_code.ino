@@ -493,7 +493,7 @@ void sendMaintenanceMsg(String id, String maint_msg) {
 // Config for Maintenance components (water level, filter changing)
 const unsigned int CHECK_WATER_LEVEL = 10000; // 10 seconds
 const unsigned int CHECK_FILTER = 10000; // 10 seconds
-unsigned long DAY_NIGHT_CYCLE = 60000; // 1 minute
+unsigned long DAY_NIGHT_CYCLE = 120000; // 2 minutes
 unsigned long lastWaterLevelCheck = 0;
 unsigned long lastFilterCheck = 0;
 unsigned long lastFilterChange = 0;
@@ -550,8 +550,8 @@ void configDayNightCycle(String dayNightStr) {
     if (arr[i].toFloat() < 0) return;
   }
   unsigned long currentTime = millis();
-  DAY_NIGHT_CYCLE = arr[0].toInt() * 1000;
-  unsigned long cycleStart = arr[1].toInt() * 1000;
+  DAY_NIGHT_CYCLE = arr[0].toInt() * 60 * 1000;
+  unsigned long cycleStart = floor(arr[1].toFloat() * 60 * 1000);
   lastDayNightCheck = currentTime - cycleStart;
   day = (bool) arr[2].toInt();
   Serial.println("SET DAY NIGHT CYCLE");

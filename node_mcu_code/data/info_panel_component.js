@@ -52,20 +52,20 @@ const InfoPanel = () => {
                 </div>
                 <div class="d-none text-center info-content" id="day-night-content">
                     <label class="form-label" for="day-night-control">
-                        Day Night Cycle: 
-                        <span id="day-night-length-display"></span>
+                        Day/Night Cycle: 
+                        <span><span id="day-night-length-display"></span> mins</span>
                     </label>
                     <div class="d-flex justify-content-center align-items-center flex-wrap">
                         <div>
                             <div class="input-group">
                                 <label class="input-group-text">Cycle Length</label>
-                                <input type="number" min="60" value="60" class="form-control" id="day-night-length" placeholder="Cycle Length"/>
+                                <input type="number" min="1" value="2" class="form-control" id="day-night-length" placeholder="Cycle Length" title="Length of day/night period in minutes"/>
                             </div>
                         </div>
                         <div>
                             <div class="input-group">
                                 <label class="input-group-text">Start Time</label>
-                                <input type="number" min="0" value="0" class="form-control" id="day-night-start" placeholder="Cycle Start"/>
+                                <input type="number" min="0" value="0" class="form-control" id="day-night-start" placeholder="Cycle Start" title="Start time into cycle in minutes"/>
                             </div>
                         </div>
                         <div>
@@ -83,13 +83,66 @@ const InfoPanel = () => {
                     </div>
                 </div>
                 <div class="d-none text-center info-content" id="help-content">
-                    Info about each plot - what it represents and what actuators it controls
+                    <div class="d-flex justify-content-center">
+                        <table class="table table-hover text-center w-75">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Plot</th>
+                                    <th scope="col">Data</th>
+                                    <th scope="col">Control</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Air Temperature</td>
+                                    <td>Plots internal (blue or red dots) and external (white diamonds) air temperature</td>
+                                    <td>Fans and peliter cooling system</td>
+                                </tr>
+                                <tr>
+                                    <td>Humidity</td>
+                                    <td>Plots internal (blue or red dots) and external (white diamonds) humidity</td>
+                                    <td>Mister and fans</td>
+                                </tr>
+                                <tr>
+                                    <td>Water Temperature</td>
+                                    <td>Plots the water temperature in the resevoir</td>
+                                    <td>Chiller</td>
+                                </tr>
+                                <tr>
+                                    <td>TDS</td>
+                                    <td>Plots total dissolved solids in the water resevoir (distilled water is 0)</td>
+                                    <td>Water filters</td>
+                                </tr>
+                                <tr>
+                                    <td>Soil Moisture</td>
+                                    <td>Plots soil moisture - water stored in the soil</td>
+                                    <td>Water pumps</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="d-none text-center info-content" id="plant-content">
-                    Info about the cobra lily specifically.  Where it grows naturally, ideal conditions, etc.
+                <div class="d-none text-center info-content text-center" id="plant-content">
+                    <h1>Cobra Lily</h1>
+                    <ul class="list-group">
+                        <li class="list-group-item">Cold running groundwater</li>
+                        <li class="list-group-item">Low nutrient soil and water</li>
+                        <li class="list-group-item">Temperate mountain climate</li>
+                        <li class="list-group-item">Day & Night cycles</li>
+                    </ul>
                 </div>
                 <div class="d-none text-center info-content" id="about-content">
-                    Idk if we even need this tab - maybe just description of the project
+                    <div class="row">
+                        <div class="col-2"></div>
+                        <div class="col-8">
+                            Habitat simulation with programmable growth parameters to support growing plants with different needs.
+                            The sensors monitor the environmental conditions inside the enclosure in real-time.  The threshold bands 
+                            on each plot correspond to the acceptable range of values required by the plant.  Actuators are triggered
+                            according to the configured ranges on each plot to alter the environmental conditions according to the user
+                            parameters.
+                        </div>
+                        <div class="col-2"></div>
+                    </div>
                 </div>
                 <div class="d-none text-center info-content" id="testing-content">
                     <div class="row">
