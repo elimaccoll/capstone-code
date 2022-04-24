@@ -15,11 +15,11 @@ $("#filter-btn").click(() => {
 });
 
 export const displayFilterQuality = (filterAgeStr) => {
-  const filterAge = Math.floor(parseInt(filterAgeStr) / 1000);
-  $("#maintenance-filter-age").text(filterAge);
+  const filterAge = Math.floor(parseInt(filterAgeStr) / 1000 / 60);
+  $("#maintenance-filter-age").text(filterAge + " mins");
   let color;
-  if (filterAge < 60) color = "lightgreen"; // 1 minute
-  else if (filterAge < 120) color = "yellow"; // 2 minutes
+  if (filterAge < 1000) color = "lightgreen"; // 1 minute
+  else if (filterAge < 2000) color = "yellow"; // 2 minutes
   else color = "lightcoral";
   $("#maintenance-filter").css("backgroundColor", color);
 };

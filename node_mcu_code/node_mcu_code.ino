@@ -39,7 +39,6 @@ String extAirTemp;
 String extHumidity;
 String waterTemp;
 String soilMoisture;
-String soilTemp;
 String tds;
 
 String waterLevel;
@@ -67,9 +66,6 @@ String getExternalHumidity() {
 }
 String getWaterTemp() {
   return waterTemp;
-}
-String getSoilTemp() {
-  return soilTemp;
 }
 String getSoilMoisture() {
   return soilMoisture;
@@ -222,11 +218,6 @@ void setup() {
     request->send(200, "text/plain", getWaterTemp().c_str());
     waterTemp = "";
   });
-  // Route to send soil temperature reading
-  server.on("/soil_temp", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "text/plain", getSoilTemp().c_str());
-    soilTemp = "";
-  });
   // Route to send soil moisture reading
   server.on("/soil_moisture", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", getSoilMoisture().c_str());
@@ -348,9 +339,6 @@ void parseData(String msg) {
   }
   else if (id == "wt") {
     waterTemp = value;
-  }
-  else if (id == "st") {
-    soilTemp = value;
   }
   else if (id == "sm") {
     soilMoisture = value;

@@ -38,25 +38,6 @@ export default [
     },
   },
   {
-    name: "water-temp",
-    config: {
-      symbol: "wt",
-      title: "Water Temperature",
-      yAxis: "Temperature (°C)",
-      unit: "°C",
-      minBound: -10,
-      maxBound: 40,
-      minThreshold: 4,
-      maxThreshold: 13,
-      data1: [],
-      data2: [],
-    },
-    read: {
-      intervals: [3],
-      routes: ["water_temp"],
-    },
-  },
-  {
     name: "tds",
     config: {
       symbol: "td",
@@ -92,6 +73,25 @@ export default [
     read: {
       intervals: [5],
       routes: ["soil_moisture"],
+    },
+  },
+  {
+    name: "water-temp",
+    config: {
+      symbol: "wt",
+      title: "Water Temperature",
+      yAxis: "Temperature (°C)",
+      unit: "°C",
+      minBound: -10,
+      maxBound: 40,
+      minThreshold: 4,
+      maxThreshold: 13,
+      data1: [],
+      data2: [],
+    },
+    read: {
+      intervals: [3],
+      routes: ["water_temp"],
     },
   },
 ];

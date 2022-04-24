@@ -29,9 +29,11 @@ SoftwareSerial arduinoSerial(RX_PIN, TX_PIN);
 #define VREF 5.0 // analog reference voltage of the ADC
 
 // Control Pins
-#define MISTER_PIN 100 // find real pin
+#define MISTER_PIN 11
 
 #define LED_PIN 9
+
+#define PUMP_PIN 4
 
 // Sensor Pins
 #define TDS_PIN A0
@@ -49,9 +51,9 @@ const int NUM_AIR_TEMP = 2;
 #define WATER_TEMP_PIN 8
 #define SOIL_TEMP_BUS_PIN 101 // get real pin
 
-#define DHT_INT_BOT 2 // Bottom
-#define DHT_INT_TOP 4 // Top
-#define DHT_EXT 3 // External
+#define DHT_INT_BOT 26 // Bottom
+#define DHT_INT_TOP 28 // Top
+#define DHT_EXT 24 // External
 const int NUM_DHT = 2;
 const unsigned int DHT_PINS[NUM_DHT] = {DHT_INT_BOT, DHT_INT_TOP};
 
@@ -206,28 +208,6 @@ class WaterTemperature : public TemperatureOW {
       }
 };
 
-class SoilTemperature : public TemperatureOW {
-    private:
-      unsigned int PIN = SOIL_TEMP_BUS_PIN;
-    public:
-      SoilTemperature(String id, unsigned int readInterval, float minThresh, float maxThresh) 
-          : TemperatureOW (id, readInterval, minThresh, maxThresh, PIN) {}
-      float readSensor() override {
-        float avgTempC = readTemp();
-        control();
-        return avgTempC;
-      }
-      void control() override {
-        if (checkControl() == 0) return;
-        else if (checkControl() == -1) {
-//          Serial.println("Soil temperature below minThresh");
-        }
-        else {
-//          Serial.println("Soil temperature above maxThresh");
-        }
-      }
-};
-
 // For reading air temp with DHT
 // TODO: Remove if unused
 class AirTemperatureDHT : public Sensor {
@@ -269,15 +249,31 @@ class ExternalHumidity : public Sensor {
       }
 };
 
+
 class Humidity : public Sensor {
     private:
       dht DHT;
+      bool misterOn = false;
     public:
         Humidity(String id, unsigned int readInterval, float minThresh, float maxThresh) 
             : Sensor(id, readInterval, minThresh, maxThresh) {}
         void setupSensor() override {
           for (int i = 0; i < NUM_DHT; i++) {
             pinMode(DHT_PINS[i], OUTPUT);
+          }
+        }
+        void turnOnMister() {
+          if (misterOn == false) {
+            Serial.println("TURN ON MISTER");
+            digitalWrite(MISTER_PIN, HIGH);
+            misterOn = true;
+          }
+        }
+        void turnOffMister() {
+          if (misterOn == true) {
+            Serial.println("TURN OFF MISTER");
+            digitalWrite(MISTER_PIN, LOW);
+            misterOn = false;
           }
         }
         float readSensor() override {
@@ -296,15 +292,15 @@ class Humidity : public Sensor {
         }
         void control() override {
           if (checkControl() == 0) {
-//            digitalWrite(MISTER_PIN, LOW);
+           turnOffMister();
           }
           else if (checkControl() == -1) {
             // Below threshold average
-//            digitalWrite(MISTER_PIN, HIGH);
+            turnOnMister();
           }
-          else {
+          else if (checkControl() == 1) {
             // Above threshold average
-//            digitalWrite(MISTER_PIN, LOW);
+            turnOffMister();
           }
         }
 };
@@ -346,7 +342,7 @@ class TDS : public Sensor {
           pinMode(TDS_PIN, INPUT);
         }
         float readSensor() override {
-          Serial.println("READING TDS"); // TODO: Why does reading only work when println is here
+          // Serial.println("READING TDS"); // TODO: Why does reading only work when println is here
           float analogTDS = analogRead(TDS_PIN);
           float voltage = analogTDS * (float)VREF / 1024.0; // convert to voltage value
           float currTemp = recentAirTemp;
@@ -406,8 +402,8 @@ void sendDataMsg(String id, float data) {
 
 // Config for setting up Sensor objects
 // Read Timings (milliseconds)
-const unsigned int READ_INTERNAL_AIR_TEMP = 1000;
-const unsigned int READ_INTERNAL_HUMIDITY = 1000;
+const unsigned int READ_INTERNAL_AIR_TEMP = 2000;
+const unsigned int READ_INTERNAL_HUMIDITY = 2000;
 const unsigned int READ_EXTERNAL_AIR_TEMP = 3000;
 const unsigned int READ_EXTERNAL_HUMIDITY = 3000;
 const unsigned int READ_SOIL_TEMP = 3000;
@@ -417,20 +413,17 @@ const unsigned int READ_TDS = 3000;
 const unsigned int READ_WATER_LEVEL = 10000;
 
 // Default threshold values - make these match the default javascript thresholds
-float HUMIDITY_MAX = 50;
-float HUMIDITY_MIN = 40;
+float HUMIDITY_MAX = 100;
+float HUMIDITY_MIN = 50;
 
-float AIR_TEMP_MAX = 30;
-float AIR_TEMP_MIN = 20;
-
-float SOIL_TEMP_MAX = 15;
-float SOIL_TEMP_MIN = 5;
+float AIR_TEMP_MAX = 21;
+float AIR_TEMP_MIN = 10;
 
 float SOIL_MOISTURE_MAX = 60;
 float SOIL_MOISTURE_MIN = 50;
 
-float WATER_TEMP_MAX = 15;
-float WATER_TEMP_MIN = 5;
+float WATER_TEMP_MAX = 4;
+float WATER_TEMP_MIN = 13;
 
 float TDS_MAX = 100;
 float TDS_MIN = 0;
@@ -583,6 +576,10 @@ void dayNightCycle(bool isDay) {
   // Serial.println(brightnessMap);
 }
 
+void setBrightness() {
+  analogWrite(LED_PIN, 20);
+}
+
 void checkDayNightCycle() {
   unsigned long currentTime = millis();
   if ((currentTime - lastDayNightCheck) >= DAY_NIGHT_CYCLE) {
@@ -602,15 +599,18 @@ void setup() {
   // Serial to print
   Serial.begin(115200);
   TCCR2B = TCCR2B & B11111000 | B00000001;  // for PWM frequency of 31372.55 Hz - Pins 9 and 10
-  setupSensorSuite();
+    
   pinMode(LIQUID_LEVEL_PIN, INPUT_PULLUP);
 
   pinMode(MISTER_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(PUMP_PIN, OUTPUT);
+
+  setupSensorSuite();
+  digitalWrite(PUMP_PIN, HIGH);
 
   // Start serial connection to NodeMCU
   arduinoSerial.begin(57600);
-  // Serial.println("Starting");
   delay(1000);
 }
 
@@ -638,9 +638,6 @@ void configThreshold(String msg) {
   }
   else if (id == "ih") {
     ih->setThresholds(minThresh, maxThresh);
-  }
-  else if (id == "st") {
-//    st->setThresholds(minThresh, maxThresh);
   }
   else if (id == "wt") {
     wt->setThresholds(minThresh, maxThresh);
@@ -736,10 +733,17 @@ void processMessage(String msg) {
 char c; // Used for reading characters over serial connection
 String dataIn; // Used to build strings using the characters (c) read over serial connection
 
+const unsigned long READ = 1000;
+unsigned long lastRead = 0;
+
 // Main loop
 void loop() {
-  readSensorSuite();
-  checkMaintenance();
+  unsigned long currentTime = millis();
+  if (currentTime - lastRead >= READ) {
+    readSensorSuite();
+    checkMaintenance();
+    lastRead = currentTime; 
+  }
   
   // Receive messages over Serial connection
   while (arduinoSerial.available() > 0) {
